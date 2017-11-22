@@ -17,7 +17,7 @@ import static net.bytebuddy.matcher.ElementMatchers.*;
 
 /**
  * Date:2017/11/21
- * Name:chao.cheng
+ * @author :chao.cheng
  **/
 public class DubboAgent {
     private static Logger LOGGER = LoggerFactory.getLogger(DubboAgent.class);
