@@ -2,9 +2,7 @@ package com.dubboagent.context.trace;
 
 import com.dubboagent.context.utils.GlobalIdGenerator;
 
-import java.util.ArrayList;
 import java.util.EmptyStackException;
-import java.util.List;
 import java.util.Stack;
 
 /**
