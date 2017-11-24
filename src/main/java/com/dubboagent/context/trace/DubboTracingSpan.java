@@ -12,17 +12,29 @@ import java.util.List;
  **/
 public class DubboTracingSpan implements AbstractSpan {
 
+
     protected int spanId;
     protected int currentSpanId;
+    /**
+     * 方法名称
+     **/
     protected String methodName;
+    /**
+     * 类名称
+     **/
     protected String className;
 
     protected long startTime;
     protected long endTime;
 
+    /**
+     * 异常信息集合
+     **/
     protected List<LogDataEntity> logList;
 
-
+    /**
+     * 将异常信息封装到List集合中
+     */
     @Override
     public DubboTracingSpan log(Throwable t) {
         if (logList == null) {
@@ -37,15 +49,6 @@ public class DubboTracingSpan implements AbstractSpan {
         return this;
     }
 
-    @Override
-    public AbstractSpan setOperationName(String operationName) {
-        return null;
-    }
-
-    @Override
-    public AbstractSpan tag(String key, String value){
-        return null;
-    }
 
     @Override
     public int getSpanId() {
@@ -71,7 +74,6 @@ public class DubboTracingSpan implements AbstractSpan {
     public void setCurrentSpanId(int currentSpanId) {
         this.currentSpanId = currentSpanId;
     }
-
 
 
     public long getStartTime() {

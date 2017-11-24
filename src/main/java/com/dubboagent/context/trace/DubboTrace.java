@@ -31,6 +31,9 @@ public class DubboTrace implements AbstractTrace {
     }
 
     @Override
+    /**
+     * 查看栈顶元素
+     */
     public AbstractSpan peekSpan() {
         try {
             return spanList.peek();
@@ -40,11 +43,38 @@ public class DubboTrace implements AbstractTrace {
     }
 
     @Override
+    /**
+     * 将新的span信息压到栈顶
+     */
     public void pushSpan(AbstractSpan span) {
         spanList.push(span);
     }
 
+    /**
+     * 获取traceId
+     * @return
+     */
+    @Override
+    public String getTraceId() {
+        return traceId;
+    }
 
+    @Override
+    public void setTraceId(String traceId) {
+        this.traceId = traceId;
+    }
+
+    @Override
+    public String getSpanListStr() {
+
+        StringBuffer stringBuffer = new StringBuffer();
+        spanList.stream().forEach((span)->
+            stringBuffer.append(span.getSpanId()+"-")
+        );
+
+        return stringBuffer.toString().substring(0,stringBuffer.length()-1);
+
+    }
 
 
 }

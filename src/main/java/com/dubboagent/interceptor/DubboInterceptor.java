@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.Callable;
 
 /**
@@ -52,6 +53,14 @@ public class DubboInterceptor {
         } finally {
             long endTime = System.currentTimeMillis();
             LOGGER.info("[类名:" + method.getDeclaringClass().getName() + " 方法名:" + method.getName() + " 执行时间是:" + (endTime - startTime) + "毫秒]");
+
+            try {
+                //todo 发送消息
+            } catch (Throwable te) {
+
+            } finally {
+                ContextManager.cleanTrace();
+            }
         }
         return rtnObj;
     }
@@ -63,12 +72,13 @@ public class DubboInterceptor {
      * @param arguments
      * @return
      */
-    public static AbstractSpan beforeMethod(Method method, Object[] arguments) {
+    public static void beforeMethod(Method method, Object[] arguments) {
 
         StringBuffer paramBuf = new StringBuffer();
         try {
             if (arguments != null && arguments.length > 0) {
                 Arrays.stream(arguments).forEach((args) -> paramBuf.append(args));
+
                 LOGGER.info("[方法" + method.getName() + " 入参是:" + paramBuf.toString() + "]");
             }
 
@@ -83,6 +93,7 @@ public class DubboInterceptor {
         boolean isConsumer = rpcContext.isConsumerSide();
         boolean isProvider = rpcContext.isProviderSide();
 
+
         if (isConsumer) {
 
             if (null == span) {
@@ -94,18 +105,28 @@ public class DubboInterceptor {
                 span.setSpanId(span.getSpanId() + 1);
             }
 
-            rpcContext.getAttachments().put("traceId", "");
-            rpcContext.getAttachments().put("spanJson", "");
 
+            rpcContext.getAttachments().put("agent-traceId", trace.getTraceId());
+            rpcContext.getAttachments().put("agent-spanIdStr", trace.getSpanListStr());
+
+            LOGGER.info("attachments:" + rpcContext.getAttachments() + "==============");
 
         } else if (isProvider) {
 
+            String traceId = rpcContext.getAttachment("agent-traceId");
+            String spanIdStr = rpcContext.getAttachment("agent-spanIdStr");
 
-        } else {
+            if (null != traceId && !"".equals(traceId)) {
+                AbstractTrace abstractTrace = ContextManager.createProviderTrace(traceId);
+                String[] spanIdTmp = spanIdStr.split("-");
+                Collections.reverse(Arrays.asList(spanIdTmp));
+                //// TODO: 2017/11/24 创建Span stack 
+
+            }
+
 
         }
 
-        return span;
     }
 
 
@@ -155,6 +176,7 @@ public class DubboInterceptor {
 
     /**
      * 获取请求URL
+     *
      * @param url
      * @param invocation
      * @return

@@ -4,32 +4,76 @@ import java.util.List;
 
 /**
  * Date:2017/11/22
+ *
  * @author :chao.cheng
  **/
 public interface AbstractSpan {
 
 
+    /**
+     * 异常记录
+     *
+     * @param t
+     * @return
+     */
     public AbstractSpan log(Throwable t);
 
-    public AbstractSpan setOperationName(String operationName);
 
-    public AbstractSpan tag(String key, String value);
-
+    /**
+     * 获取异常记录列表
+     *
+     * @return
+     */
     public List<LogDataEntity> getLogList();
 
+    /**
+     * 获取spanId
+     *
+     * @return
+     */
     public int getSpanId();
 
+    /**
+     * 设置spanId
+     *
+     * @param spanId
+     */
     public void setSpanId(int spanId);
 
+    /**
+     * 设置当前spanId
+     *
+     * @param currentSpanId
+     */
     public void setCurrentSpanId(int currentSpanId);
 
-    public String getMethodName() ;
+    /**
+     * 获取方法名
+     *
+     * @return
+     */
+    public String getMethodName();
 
-    public void setMethodName(String methodName) ;
+    /**
+     * 设置方法名
+     *
+     * @param methodName
+     */
+    public void setMethodName(String methodName);
 
-    public String getClassName() ;
+    /**
+     * 获取类名
+     *
+     * @return
+     */
+    public String getClassName();
 
-    public void setClassName(String className) ;
+    /**
+     * 设置类名
+     *
+     * @param className
+     */
+    public void setClassName(String className);
 
 
 }

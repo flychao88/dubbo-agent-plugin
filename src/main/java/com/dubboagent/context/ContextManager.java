@@ -30,16 +30,34 @@ public class ContextManager {
         return abstractTrace;
     }
 
+    public static AbstractTrace createProviderTrace(String traceId) {
+        AbstractTrace abstractTrace = CONTEXT.get();
+        if(null == abstractTrace) {
+            abstractTrace = new DubboTrace();
+            abstractTrace.setTraceId(traceId);
+            CONTEXT.set(abstractTrace);
+        }
+        return abstractTrace;
+    }
+
     public static AbstractSpan createEntrySpan(String operationName) {
         AbstractSpan abstractSpan = new DubboTracingSpan();
-        abstractSpan.setSpanId(0);
-        abstractSpan.setCurrentSpanId(0);
+        abstractSpan.setSpanId(1);
+        abstractSpan.setCurrentSpanId(1);
         return abstractSpan;
     }
 
     public static AbstractSpan activeSpan() {
         return CONTEXT.get().peekSpan();
     }
+
+
+
+    public static void cleanTrace() {
+        CONTEXT.remove();
+    }
+
+
 
 
 

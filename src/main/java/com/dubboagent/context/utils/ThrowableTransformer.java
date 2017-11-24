@@ -18,7 +18,10 @@
 
 package com.dubboagent.context.utils;
 
-
+/**
+ *  异常格式转换类
+ *  @author :chao.cheng
+ */
 public enum ThrowableTransformer {
     /**
      * 模拟单例类
