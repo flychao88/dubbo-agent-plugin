@@ -28,6 +28,11 @@ public class DubboTracingSpan implements AbstractSpan {
     protected long endTime;
 
     /**
+     * 方法执行时间
+     */
+    protected long executeTime;
+
+    /**
      * 异常信息集合
      **/
     protected List<LogDataEntity> logList;
@@ -76,18 +81,22 @@ public class DubboTracingSpan implements AbstractSpan {
     }
 
 
+    @Override
     public long getStartTime() {
         return startTime;
     }
 
+    @Override
     public void setStartTime(long startTime) {
         this.startTime = startTime;
     }
 
+    @Override
     public long getEndTime() {
         return endTime;
     }
 
+    @Override
     public void setEndTime(long endTime) {
         this.endTime = endTime;
     }
@@ -114,5 +123,10 @@ public class DubboTracingSpan implements AbstractSpan {
     @Override
     public void setClassName(String className) {
         this.className = className;
+    }
+
+    @Override
+    public void setExecuteTime(long exeTime) {
+        this.executeTime = exeTime;
     }
 }

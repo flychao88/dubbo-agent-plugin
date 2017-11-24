@@ -52,18 +52,15 @@ public class DubboInterceptor {
 
         } finally {
             long endTime = System.currentTimeMillis();
+
             LOGGER.info("[类名:" + method.getDeclaringClass().getName() + " 方法名:" + method.getName() + " 执行时间是:" + (endTime - startTime) + "毫秒]");
 
-            try {
-                //todo 发送消息
-            } catch (Throwable te) {
+            finallyMethod(startTime, endTime, method);
 
-            } finally {
-                ContextManager.cleanTrace();
-            }
         }
         return rtnObj;
     }
+
 
     /**
      * 初始化前置
@@ -123,10 +120,7 @@ public class DubboInterceptor {
                 //// TODO: 2017/11/24 创建Span stack 
 
             }
-
-
         }
-
     }
 
 
@@ -141,6 +135,31 @@ public class DubboInterceptor {
         Result result = (Result) rtnObj;
         if (result != null && result.getException() != null) {
             dealException(result.getException());
+        }
+    }
+
+    /**
+     * span消息封装
+     * 消息发送
+     *
+     * @param startTime
+     * @param endTime
+     * @param method
+     */
+    public static void finallyMethod(long startTime, long endTime, Method method) {
+        AbstractSpan span = ContextManager.activeSpan();
+        span.setStartTime(startTime);
+        span.setEndTime(endTime);
+        span.setExecuteTime(endTime - startTime);
+        span.setMethodName(method.getName());
+        span.setClassName(method.getDeclaringClass().getName());
+
+        try {
+            //todo 发送消息
+        } catch (Throwable te) {
+
+        } finally {
+            ContextManager.cleanTrace();
         }
     }
 

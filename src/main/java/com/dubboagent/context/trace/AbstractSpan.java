@@ -75,5 +75,39 @@ public interface AbstractSpan {
      */
     public void setClassName(String className);
 
+    /**
+     * 获取开始时间
+     *
+     * @return
+     */
+    public long getStartTime();
+
+    /**
+     * 设置开始时间
+     *
+     * @param startTime
+     */
+    public void setStartTime(long startTime);
+
+    /**
+     * 获取结束时间
+     *
+     * @return
+     */
+    public long getEndTime();
+
+    /**
+     * 设置结束时间
+     *
+     * @param endTime
+     */
+    public void setEndTime(long endTime);
+
+    /**
+     * 方法执行时间
+     * @param exeTime
+     */
+    public void setExecuteTime(long exeTime);
+
 
 }
