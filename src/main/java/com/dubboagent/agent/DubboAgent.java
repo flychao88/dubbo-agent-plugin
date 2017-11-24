@@ -17,7 +17,7 @@ import static net.bytebuddy.matcher.ElementMatchers.*;
 
 /**
  * Date:2017/11/21
- * @author :chao.cheng1
+ * @author :chao.cheng
  **/
 public class DubboAgent {
     private static Logger LOGGER = LoggerFactory.getLogger(DubboAgent.class);
@@ -26,12 +26,14 @@ public class DubboAgent {
 
         ElementMatcher elementMatcher = null;
         if(argument != null && !"".equals(argument)) {
+            elementMatcher = ElementMatchers.nameStartsWith(argument)
+                    .or(nameMatches("com.alibaba.dubbo.monitor.support.MonitorFilter"));
             elementMatcher = ElementMatchers.nameStartsWith(argument);
         } else {
             LOGGER.error("[error] 需要指定需要扫描的包路径,如:com.xxx.test");
-            elementMatcher = ElementMatchers.nameStartsWith("com.chinagpay");
+            elementMatcher = ElementMatchers.nameStartsWith("org.spring.springboot.dubbo")
+                    .or(nameMatches("com.alibaba.dubbo.monitor.support.MonitorFilter"));
         }
-
         new AgentBuilder.Default()
                 //根据包名匹配
                 .type(elementMatcher)
@@ -43,12 +45,13 @@ public class DubboAgent {
                 .and(not(isAbstract()))
                 .and(not(isPrivate()))
                 .and(not(isEnum()))
-                .and(not(isAnnotation()))
+               // .and(not(isAnnotation()))
                 .transform((builder,typeDescription,classLoader) -> builder
-                        //匹配哪些方法
+                        //不匹配哪些方法
                         .method(not(isConstructor())
-                                        .or(not(isStatic()))
-                                        .or(not(named("main")))
+                                        .and(not(isStatic()))
+                                        .and(not(named("main")))
+                                        .and((named("invoke")))
                         //.method(named("printObj")
                         )
                         //拦截过滤器设置
