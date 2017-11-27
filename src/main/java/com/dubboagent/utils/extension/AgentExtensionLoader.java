@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.net.URL;
 import java.util.Enumeration;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -67,27 +66,28 @@ public class AgentExtensionLoader<T> {
 
     /**
      * 加载Setting Class
+     *
      * @param <T>
      * @return
      */
     public <T> T loadSettingClass() {
 
-        if(cachedSettingClass == null) {
-                try {
-                    synchronized (EXTENSION_INSTANCES) {
-                        Object cachedSettingObject = EXTENSION_INSTANCES.get(type);
-                        if(null == cachedSettingObject) {
-                            loadFile(SENDER_DIRECTORY);
-                            EXTENSION_INSTANCES.put(type, cachedSettingClass.newInstance());
-                        }
+        if (cachedSettingClass == null) {
+            try {
+                synchronized (EXTENSION_INSTANCES) {
+                    Object cachedSettingObject = EXTENSION_INSTANCES.get(type);
+                    if (null == cachedSettingObject) {
+                        loadFile(SENDER_DIRECTORY);
+                        EXTENSION_INSTANCES.put(type, cachedSettingClass.newInstance());
                     }
-                    System.out.println(EXTENSION_INSTANCES);
-                } catch (Throwable e) {
-                    logger.error("加载扩展类失败! interface:" + type, e);
-                    return null;
                 }
+                System.out.println(EXTENSION_INSTANCES);
+            } catch (Throwable e) {
+                logger.error("加载扩展类失败! interface:" + type, e);
+                return null;
+            }
         }
-        return (T)EXTENSION_INSTANCES.get(cachedSettingClass);
+        return (T) EXTENSION_INSTANCES.get(cachedSettingClass);
     }
 
 
@@ -176,11 +176,19 @@ public class AgentExtensionLoader<T> {
                 }
             }
         } catch (Throwable t) {
-            IllegalStateException e = new IllegalStateException("加载扩展类失败(interface: " + type + ", class line: " + line + ") in " + url + ", cause: " + t.getMessage(), t);
+            IllegalStateException e = new IllegalStateException("加载扩展类失败(interface: " + type + ", class line: "
+                    + line + ") in " + url + ", cause: " + t.getMessage(), t);
+
+            throw e;
         }
     }
 
 
+    /**
+     * 获取classLoader配置文件查找器
+     *
+     * @return
+     */
     private static ClassLoader findClassLoader() {
         return AgentExtensionLoader.class.getClassLoader();
     }
