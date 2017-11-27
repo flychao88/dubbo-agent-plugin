@@ -70,7 +70,7 @@ public class AgentExtensionLoader<T> {
      * @param <T>
      * @return
      */
-    public <T> T loadSettingClass() {
+    public <T> T loadSettingClass() throws Throwable{
 
         if (cachedSettingClass == null) {
             try {
@@ -83,7 +83,7 @@ public class AgentExtensionLoader<T> {
                 }
             } catch (Throwable e) {
                 logger.error("加载扩展类失败! interface:" + type, e);
-                return null;
+                throw e;
             }
         }
         return (T) EXTENSION_INSTANCES.get(type);
@@ -194,7 +194,7 @@ public class AgentExtensionLoader<T> {
     }
 
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Throwable {
         MessageSender messageSender = AgentExtensionLoader.getExtensionLoader(MessageSender.class)
                 .loadSettingClass();
     }

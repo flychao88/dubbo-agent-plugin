@@ -205,23 +205,15 @@ public class DubboInterceptor {
                 MessageSender messageSender = AgentExtensionLoader.getExtensionLoader(MessageSender.class)
                         .loadSettingClass();
 
-                if (messageSender != null) {
-                    messageSender.sendMsg("aaaa", span.toString());
-                } else {
-                    LOGGER.info("null-----------------------");
-                }
+                messageSender.sendMsg("agent", span.toString());
 
             } catch (Throwable te) {
-                // LOGGER.error("[agent消息发送失败] method:" + span.getMethodName() + " className:" + span.getClassName(), te);
-                LOGGER.error("", te);
+                LOGGER.error("[agent消息发送失败] method:" + span.getMethodName() + " className:" + span.getClassName(), te);
             } finally {
                 ContextManager.cleanTrace();
             }
-
         }
-
     }
-
 
     /**
      * 如果异常是抛出的方式
