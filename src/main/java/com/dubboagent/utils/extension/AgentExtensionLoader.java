@@ -106,7 +106,6 @@ public class AgentExtensionLoader<T> {
                 urls = ClassLoader.getSystemResources(fileName);
             }
 
-
             if (urls != null) {
                 while (urls.hasMoreElements()) {
                     java.net.URL url = urls.nextElement();
@@ -154,7 +153,6 @@ public class AgentExtensionLoader<T> {
             if (i > 0) {
                 name = line.substring(0, i).trim();
                 line = line.substring(i + 1).trim();
-                logger.info("line======"+line);
             }
             if (line.length() > 0) {
                 Class<?> clazz = Class.forName(line, true, classLoader);
