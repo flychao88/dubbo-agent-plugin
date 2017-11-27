@@ -1,9 +1,7 @@
 package com.dubboagent.interceptor;
 
 import com.alibaba.dubbo.common.URL;
-import com.alibaba.dubbo.rpc.Invocation;
-import com.alibaba.dubbo.rpc.Result;
-import com.alibaba.dubbo.rpc.RpcContext;
+import com.alibaba.dubbo.rpc.*;
 import com.dubboagent.context.ContextManager;
 import com.dubboagent.context.trace.AbstractSpan;
 import com.dubboagent.context.trace.AbstractTrace;
@@ -36,7 +34,9 @@ public class DubboInterceptor {
         long startTime = System.currentTimeMillis();
         Object rtnObj = null;
 
-        beforeMethod(method, arguments);
+        DubboInterceptParam paramObj = analyzeDubboParam(arguments);
+
+        beforeMethod(paramObj, arguments);
 
         try {
             //方法拦截后,调用call方法,程序继续执行
@@ -55,38 +55,75 @@ public class DubboInterceptor {
         } finally {
             long endTime = System.currentTimeMillis();
 
-            LOGGER.info("[类名:" + method.getDeclaringClass().getName() + " 方法名:" + method.getName() + " 执行时间是:" + (endTime - startTime) + "毫秒]");
+            LOGGER.info("[服务接口名:" + paramObj.getClassName() + " 方法名:" + paramObj.getMethodName() + " 执行时间是:"
+                    + (endTime - startTime) + "毫秒]");
 
-            finallyMethod(startTime, endTime, method);
+            finallyMethod(startTime, endTime, paramObj);
 
         }
         return rtnObj;
+    }
+
+    /**
+     * 解析获取Dubbo请求的方法名和服务接口名
+     *
+     * @param arguments
+     * @return
+     */
+    private static DubboInterceptParam analyzeDubboParam(@AllArguments Object[] arguments) {
+
+        DubboInterceptParam paramObj = new DubboInterceptParam();
+
+        if (arguments != null && arguments.length > 0) {
+            Arrays.stream(arguments).forEach((args) -> {
+                if (args instanceof Invoker) {
+                    Invoker urlStr = (Invoker) args;
+                    URL url = urlStr.getUrl();
+                    String className = url.getParameter("interface");
+                    paramObj.setClassName(className);
+                }
+                if (args instanceof RpcInvocation) {
+                    RpcInvocation rpcInvocation = (RpcInvocation) args;
+                    String methodName = rpcInvocation.getMethodName();
+                    paramObj.setMethodName(methodName);
+                }
+            });
+        }
+
+        return paramObj;
     }
 
 
     /**
      * 初始化前置
      *
-     * @param method
      * @param arguments
      * @return
      */
-    public static void beforeMethod(Method method, Object[] arguments) {
+    public static void beforeMethod(DubboInterceptParam paramObj, Object[] arguments) {
+
+        String methodName = paramObj.getMethodName();
+        String className = paramObj.getClassName();
 
         StringBuffer paramBuf = new StringBuffer();
         try {
             if (arguments != null && arguments.length > 0) {
-                Arrays.stream(arguments).forEach((args) -> paramBuf.append(args));
 
-                LOGGER.info("[方法" + method.getName() + " 入参是:" + paramBuf.toString() + "]");
+                Arrays.stream(arguments).forEach((args) -> {
+                    if (args instanceof RpcInvocation) {
+                        RpcInvocation rpcInvocation = (RpcInvocation) args;
+                        paramBuf.append(rpcInvocation.getArguments());
+                    }
+                });
             }
 
         } catch (Exception e) {
-            LOGGER.error("[获取方法" + method.getName() + " 入参失败]", e);
+            LOGGER.error("[获取方法" + methodName + " 入参失败]", e);
         }
 
         AbstractTrace trace = ContextManager.getOrCreateTrace("dubbo");
         AbstractSpan span = trace.peekSpan();
+
 
         RpcContext rpcContext = RpcContext.getContext();
         boolean isConsumer = rpcContext.isConsumerSide();
@@ -94,11 +131,12 @@ public class DubboInterceptor {
 
 
         if (isConsumer) {
+            LOGGER.info("[consumer]-[方法" + methodName + " 入参是:" + paramBuf.toString() + "]");
 
             if (null == span) {
                 span = ContextManager.createEntrySpan("dubbo");
-                span.setMethodName(method.getName());
-                span.setClassName(method.getDeclaringClass().getName());
+                span.setMethodName(methodName);
+                span.setClassName(className);
                 trace.pushSpan(span);
             } else {
                 span.setSpanId(span.getSpanId() + 1);
@@ -108,9 +146,8 @@ public class DubboInterceptor {
             rpcContext.getAttachments().put("agent-traceId", trace.getTraceId());
             rpcContext.getAttachments().put("agent-spanIdStr", trace.getSpanListStr());
 
-            LOGGER.info("attachments:" + rpcContext.getAttachments() + "==============");
-
         } else if (isProvider) {
+            LOGGER.info("[provider]-[方法" + methodName + " 入参是:" + paramBuf.toString() + "]");
 
             String traceId = rpcContext.getAttachment("agent-traceId");
             String spanIdStr = rpcContext.getAttachment("agent-spanIdStr");
@@ -146,30 +183,43 @@ public class DubboInterceptor {
      *
      * @param startTime
      * @param endTime
-     * @param method
      */
-    public static void finallyMethod(long startTime, long endTime, Method method) {
-        AbstractSpan span = ContextManager.activeSpan();
-        span.setStartTime(startTime);
-        span.setEndTime(endTime);
-        span.setExecuteTime(endTime - startTime);
-        span.setMethodName(method.getName());
-        span.setClassName(method.getDeclaringClass().getName());
+    public static void finallyMethod(long startTime, long endTime, DubboInterceptParam paramObj) {
+        RpcContext rpcContext = RpcContext.getContext();
+        boolean isConsumer = rpcContext.isConsumerSide();
 
-        try {
-            //发送消息
-            MessageSender messageSender = AgentExtensionLoader.getExtensionLoader(MessageSender.class)
-                    .loadSettingClass();
-
-            if (messageSender != null) {
-                messageSender.sendMsg("aaaa", "bbbb");
+        if (isConsumer) {
+            AbstractSpan span = ContextManager.activeSpan();
+            try {
+                span.setStartTime(startTime);
+                span.setEndTime(endTime);
+                span.setExecuteTime(endTime - startTime);
+                span.setMethodName(paramObj.getMethodName());
+                span.setClassName(paramObj.getClassName());
+            } catch (Throwable e) {
+                LOGGER.error(e.getMessage(), e);
             }
 
-        } catch (Throwable te) {
-            LOGGER.error("[agent消息发送失败] method:" + span.getMethodName() + " className:" + span.getClassName(), te);
-        } finally {
-            ContextManager.cleanTrace();
+            try {
+                //发送消息
+                MessageSender messageSender = AgentExtensionLoader.getExtensionLoader(MessageSender.class)
+                        .loadSettingClass();
+
+                if (messageSender != null) {
+                    messageSender.sendMsg("aaaa", span.toString());
+                } else {
+                    LOGGER.info("null-----------------------");
+                }
+
+            } catch (Throwable te) {
+                // LOGGER.error("[agent消息发送失败] method:" + span.getMethodName() + " className:" + span.getClassName(), te);
+                LOGGER.error("", te);
+            } finally {
+                ContextManager.cleanTrace();
+            }
+
         }
+
     }
 
 
@@ -216,5 +266,32 @@ public class DubboInterceptor {
         requestURL.append(":" + url.getPort() + "/");
         requestURL.append(generateOperationName(url, invocation));
         return requestURL.toString();
+    }
+
+
+    /**
+     * @author chao.cheng
+     *         封装类
+     *         用于获取Dubbo服务的方法名,接口名和参数
+     */
+    static class DubboInterceptParam {
+        private String methodName;
+        private String className;
+
+        public String getMethodName() {
+            return methodName;
+        }
+
+        public void setMethodName(String methodName) {
+            this.methodName = methodName;
+        }
+
+        public String getClassName() {
+            return className;
+        }
+
+        public void setClassName(String className) {
+            this.className = className;
+        }
     }
 }

@@ -17,19 +17,18 @@ import java.util.Properties;
 @Setting
 public class KafkaMessageSender implements MessageSender {
     private  Properties props = null;
-    private String topic = null;
+    private String topic = "test1";
 
     public KafkaMessageSender() {
         props = new Properties();
-        props.put("bootstrap.servers", "103.240.17.228:9092");
+        props.put("bootstrap.servers", "169.254.82.175:9092");
         props.put("key.serializer", "org.apache.kafka.common.serialization.ByteArraySerializer");
         props.put("value.serializer","org.apache.kafka.common.serialization.ByteArraySerializer");
         // props.put("serializer.class", "kafka.serializer.DefaultEncoder");
-        props.put("metadata.broker.list", "103.240.17.228:9092");
+        props.put("metadata.broker.list", "169.254.82.175:9092");
         props.put("enable.auto.commit", "true");
         props.put("auto.commit.interval.ms", "1000");
         props.put("session.timeout.ms", "1000");
-        props.put("zk.connect", "103.240.17.228:2181");
     }
 
 
@@ -68,7 +67,8 @@ public class KafkaMessageSender implements MessageSender {
     }
 
     public static void main(String[] args) {
-       // KafkaMessageSender.sendMsg("test1","aaaaaa".getBytes(),"cccccc".getBytes());
+        KafkaMessageSender kafkaMessageSender = new KafkaMessageSender();
+        kafkaMessageSender.sendMsg("aaaaaa","cccc3333cc");
     }
 
 

@@ -34,8 +34,15 @@ public class DubboTrace implements AbstractTrace {
      */
     public AbstractSpan peekSpan() {
         try {
-            return spanList.peek();
+
+            if(spanList.size() == 0) {
+                return null;
+            } else {
+                return spanList.peek();
+            }
+
         } catch (EmptyStackException e) {
+            e.printStackTrace();
             return null;
         }
     }

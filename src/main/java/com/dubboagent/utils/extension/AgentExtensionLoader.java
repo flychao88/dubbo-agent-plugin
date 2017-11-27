@@ -81,13 +81,12 @@ public class AgentExtensionLoader<T> {
                         EXTENSION_INSTANCES.put(type, cachedSettingClass.newInstance());
                     }
                 }
-                System.out.println(EXTENSION_INSTANCES);
             } catch (Throwable e) {
                 logger.error("加载扩展类失败! interface:" + type, e);
                 return null;
             }
         }
-        return (T) EXTENSION_INSTANCES.get(cachedSettingClass);
+        return (T) EXTENSION_INSTANCES.get(type);
     }
 
 
@@ -155,6 +154,7 @@ public class AgentExtensionLoader<T> {
             if (i > 0) {
                 name = line.substring(0, i).trim();
                 line = line.substring(i + 1).trim();
+                logger.info("line======"+line);
             }
             if (line.length() > 0) {
                 Class<?> clazz = Class.forName(line, true, classLoader);

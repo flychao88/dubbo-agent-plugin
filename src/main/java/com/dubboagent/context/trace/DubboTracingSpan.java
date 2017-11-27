@@ -1,6 +1,9 @@
 package com.dubboagent.context.trace;
 
 import com.dubboagent.utils.ThrowableTransformer;
+import org.apache.commons.lang.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -128,5 +131,13 @@ public class DubboTracingSpan implements AbstractSpan {
     @Override
     public void setExecuteTime(long exeTime) {
         this.executeTime = exeTime;
+    }
+
+
+    @Override
+    public String toString() {
+
+       // ReflectionToStringBuilder.toStringExclude(this, )
+        return ToStringBuilder.reflectionToString(this, ToStringStyle.DEFAULT_STYLE);
     }
 }
