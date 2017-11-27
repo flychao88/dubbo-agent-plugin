@@ -17,7 +17,8 @@ import java.util.concurrent.ConcurrentMap;
 public class AgentExtensionLoader<T> {
     private static Logger logger = LoggerFactory.getLogger(AgentExtensionLoader.class);
 
-    private static final String SENDER_DIRECTORY = "META-INF/";
+    private static final String SENDER_DIRECTORY = "META-INF/comm/";
+    private static final String INTERCEPTOR_DIRECTORY = "META-INF/interceptor/";
 
 
     private volatile Class<?> cachedSettingClass = null;
@@ -70,20 +71,22 @@ public class AgentExtensionLoader<T> {
      * @param <T>
      * @return
      */
-    public <T> T loadSettingClass() throws Throwable{
+    public <T> T loadSettingClass() {
 
-        if (cachedSettingClass == null) {
+        Object cachedSettingObject = EXTENSION_INSTANCES.get(type);
+        if (cachedSettingObject == null) {
             try {
                 synchronized (EXTENSION_INSTANCES) {
-                    Object cachedSettingObject = EXTENSION_INSTANCES.get(type);
-                    if (null == cachedSettingObject) {
+                    Object typeSettingObject = EXTENSION_INSTANCES.get(type);
+                    if (null == typeSettingObject) {
                         loadFile(SENDER_DIRECTORY);
-                        EXTENSION_INSTANCES.put(type, cachedSettingClass.newInstance());
+                        loadFile(INTERCEPTOR_DIRECTORY);
+                        logger.info("extendsion map:"+EXTENSION_INSTANCES);
                     }
                 }
             } catch (Throwable e) {
                 logger.error("加载扩展类失败! interface:" + type, e);
-                throw e;
+                return null;
             }
         }
         return (T) EXTENSION_INSTANCES.get(type);
@@ -162,13 +165,15 @@ public class AgentExtensionLoader<T> {
                             + clazz.getName() + "is not subtype of interface.");
                 }
                 if (clazz.isAnnotationPresent(Setting.class)) {
-                    if (cachedSettingClass == null) {
-                        cachedSettingClass = clazz;
-                    } else if (!cachedSettingClass.equals(clazz)) {
+
+                    if(null == EXTENSION_INSTANCES.get(type)) {
+                        EXTENSION_INSTANCES.put(type, clazz.newInstance());
+                    } else  {
                         throw new IllegalStateException("超过一个Setting class被找到: "
                                 + cachedSettingClass.getClass().getName()
                                 + ", " + clazz.getClass().getName());
                     }
+
                 } else {
                     logger.error("[agent异常] AgentExtensionLoad加载配置文件异常,必须指定需要使用的类!");
                 }

@@ -1,12 +1,14 @@
-package com.dubboagent.interceptor;
+package com.dubboagent.interceptor.dubbo;
 
 import com.alibaba.dubbo.common.URL;
 import com.alibaba.dubbo.rpc.*;
 import com.dubboagent.context.ContextManager;
 import com.dubboagent.context.trace.AbstractSpan;
 import com.dubboagent.context.trace.AbstractTrace;
+import com.dubboagent.interceptor.Interceptor;
 import com.dubboagent.utils.extension.AgentExtensionLoader;
 import com.dubboagent.utils.extension.MessageSender;
+import com.dubboagent.utils.extension.Setting;
 import net.bytebuddy.implementation.bind.annotation.AllArguments;
 import net.bytebuddy.implementation.bind.annotation.Origin;
 import net.bytebuddy.implementation.bind.annotation.RuntimeType;
@@ -24,20 +26,23 @@ import java.util.concurrent.Callable;
  *
  * @author:chao.cheng
  **/
-public class DubboInterceptor {
+@Setting
+public class DubboInterceptor implements Interceptor{
     private static Logger LOGGER = LoggerFactory.getLogger(DubboInterceptor.class);
 
 
     @RuntimeType
-    public static Object intercept(@SuperCall Callable<?> call, @Origin Method method, @AllArguments Object[] arguments) {
+    @Override
+    public  Object intercept(@SuperCall Callable<?> call, @Origin Method method, @AllArguments Object[] arguments) {
 
-        long startTime = System.currentTimeMillis();
+
         Object rtnObj = null;
 
         DubboInterceptParam paramObj = analyzeDubboParam(arguments);
 
         beforeMethod(paramObj, arguments);
 
+        long startTime = System.currentTimeMillis();
         try {
             //方法拦截后,调用call方法,程序继续执行
             rtnObj = call.call();

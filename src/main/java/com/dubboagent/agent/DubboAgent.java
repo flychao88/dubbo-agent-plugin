@@ -1,6 +1,9 @@
 package com.dubboagent.agent;
 
-import com.dubboagent.interceptor.DubboInterceptor;
+import com.dubboagent.interceptor.Interceptor;
+import com.dubboagent.interceptor.dubbo.DubboInterceptor;
+import com.dubboagent.utils.extension.AgentExtensionLoader;
+import com.dubboagent.utils.extension.MessageSender;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
@@ -23,6 +26,12 @@ public class DubboAgent {
     private static Logger LOGGER = LoggerFactory.getLogger(DubboAgent.class);
 
     public static void premain(String argument, Instrumentation inst) {
+
+        final Interceptor interceptor = AgentExtensionLoader.getExtensionLoader(Interceptor.class).loadSettingClass();
+        if(null == interceptor) {
+            LOGGER.info("[interceptor error] 无法正确加载Interceptor.class拦截器,项目将继续启动不影响业务进行!");
+            return;
+        }
 
         ElementMatcher elementMatcher = null;
         if(argument != null && !"".equals(argument)) {
@@ -55,7 +64,7 @@ public class DubboAgent {
                         //.method(named("printObj")
                         )
                         //拦截过滤器设置
-                        .intercept(MethodDelegation.to(DubboInterceptor.class))
+                        .intercept(MethodDelegation.to(interceptor))
                 ).with(new AgentBuilder.Listener(){
 
             @Override
