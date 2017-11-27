@@ -7,6 +7,8 @@ import com.alibaba.dubbo.rpc.RpcContext;
 import com.dubboagent.context.ContextManager;
 import com.dubboagent.context.trace.AbstractSpan;
 import com.dubboagent.context.trace.AbstractTrace;
+import com.dubboagent.utils.extension.AgentExtensionLoader;
+import com.dubboagent.utils.extension.MessageSender;
 import net.bytebuddy.implementation.bind.annotation.AllArguments;
 import net.bytebuddy.implementation.bind.annotation.Origin;
 import net.bytebuddy.implementation.bind.annotation.RuntimeType;
@@ -155,9 +157,16 @@ public class DubboInterceptor {
         span.setClassName(method.getDeclaringClass().getName());
 
         try {
-            //todo 发送消息
-        } catch (Throwable te) {
+            //发送消息
+            MessageSender messageSender = AgentExtensionLoader.getExtensionLoader(MessageSender.class)
+                    .loadSettingClass();
 
+            if (messageSender != null) {
+                messageSender.sendMsg("aaaa", "bbbb");
+            }
+
+        } catch (Throwable te) {
+            LOGGER.error("[agent消息发送失败] method:" + span.getMethodName() + " className:" + span.getClassName(), te);
         } finally {
             ContextManager.cleanTrace();
         }

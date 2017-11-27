@@ -1,6 +1,6 @@
 package com.dubboagent.context.trace;
 
-import com.dubboagent.context.utils.ThrowableTransformer;
+import com.dubboagent.utils.ThrowableTransformer;
 
 import java.util.LinkedList;
 import java.util.List;

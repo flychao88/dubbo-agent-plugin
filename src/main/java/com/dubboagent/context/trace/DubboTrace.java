@@ -1,6 +1,6 @@
 package com.dubboagent.context.trace;
 
-import com.dubboagent.context.utils.GlobalIdGenerator;
+import com.dubboagent.utils.GlobalIdGenerator;
 
 import java.util.EmptyStackException;
 import java.util.Stack;

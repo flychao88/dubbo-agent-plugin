@@ -16,7 +16,7 @@
  * Project repository: https://github.com/OpenSkywalking/skywalking
  */
 
-package com.dubboagent.context.utils;
+package com.dubboagent.utils;
 
 /**
  *  异常格式转换类
