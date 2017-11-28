@@ -1,11 +1,5 @@
 package com.dubboagent.communication.kafka;
 
-import com.alibaba.dubbo.common.utils.Log;
-import com.alibaba.fastjson.JSON;
-import com.dubboagent.context.trace.AbstractSpan;
-import com.dubboagent.context.trace.DubboTracingSpan;
-import com.dubboagent.context.trace.KeyValuePair;
-import com.dubboagent.context.trace.LogDataEntity;
 import com.dubboagent.utils.extension.MessageSender;
 import com.dubboagent.utils.extension.Setting;
 import org.apache.kafka.clients.producer.Callback;
@@ -13,8 +7,6 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 
 /**
