@@ -25,6 +25,7 @@ import java.util.Properties;
 @Setting
 public class KafkaMessageSender implements MessageSender {
     private  Properties props = null;
+    KafkaProducer<byte[], byte[]> kafkaProducer = null;
     private String topic = "test1";
 
     public KafkaMessageSender() {
@@ -37,16 +38,14 @@ public class KafkaMessageSender implements MessageSender {
         props.put("enable.auto.commit", "true");
         props.put("auto.commit.interval.ms", "1000");
         props.put("session.timeout.ms", "1000");
+        // 实例化produce
+        kafkaProducer = new KafkaProducer<byte[], byte[]>(props);
     }
 
 
     @Override
     public  void sendMsg(String key, String value) {
-        KafkaProducer<byte[], byte[]> kafkaProducer = null;
         try {
-            // 实例化produce
-            kafkaProducer = new KafkaProducer<byte[], byte[]>(props);
-
             // 消息封装
             ProducerRecord<byte[], byte[]> pr = new ProducerRecord<byte[], byte[]>(
                     topic, key.getBytes(), value.getBytes());
@@ -75,10 +74,10 @@ public class KafkaMessageSender implements MessageSender {
     }
 
     public static void main(String[] args) {
-        /*KafkaMessageSender kafkaMessageSender = new KafkaMessageSender();
-        kafkaMessageSender.sendMsg("aaaaaa","cccc3333cc");*/
+        KafkaMessageSender kafkaMessageSender = new KafkaMessageSender();
+        kafkaMessageSender.sendMsg("aaaaaa","cccc3333cc");
 
-        AbstractSpan span = new DubboTracingSpan();
+       /* AbstractSpan span = new DubboTracingSpan();
         List<LogDataEntity> list = new ArrayList<>();
 
         List<KeyValuePair> ll = new ArrayList<>();
@@ -90,7 +89,7 @@ public class KafkaMessageSender implements MessageSender {
 
         String str = (String) JSON.toJSONString(span);
         System.out.println(str);
-
+*/
 
     }
 
