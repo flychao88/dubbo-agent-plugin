@@ -15,7 +15,7 @@ import java.lang.instrument.Instrumentation;
  **/
 public class ProtocolAgent {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(DubboAgent.class);
+    private static Logger LOGGER = LoggerFactory.getLogger(ProtocolAgent.class);
 
     private static AgentPremain agentPremain = AgentExtensionLoader.getExtensionLoader(AgentPremain.class).loadSettingClass();
 

@@ -1,7 +1,5 @@
 package com.dubboagent.agent.premain;
 
-import com.dubboagent.agent.DubboAgent;
-import com.dubboagent.agent.premain.AgentPremain;
 import com.dubboagent.interceptor.Interceptor;
 import com.dubboagent.utils.extension.AgentExtensionLoader;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -27,7 +25,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
  **/
 public class HttpClientAgentPremain implements AgentPremain {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(DubboAgent.class);
+    private static Logger LOGGER = LoggerFactory.getLogger(HttpClientAgentPremain.class);
     private final Interceptor interceptor = AgentExtensionLoader.getExtensionLoader(Interceptor.class).loadSettingClass();
 
     @Override
