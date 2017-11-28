@@ -27,13 +27,13 @@ import java.util.concurrent.Callable;
  * @author:chao.cheng
  **/
 @Setting
-public class DubboInterceptor implements Interceptor{
+public class DubboInterceptor implements Interceptor {
     private static Logger LOGGER = LoggerFactory.getLogger(DubboInterceptor.class);
 
 
     @RuntimeType
     @Override
-    public  Object intercept(@SuperCall Callable<?> call, @Origin Method method, @AllArguments Object[] arguments) {
+    public Object intercept(@SuperCall Callable<?> call, @Origin Method method, @AllArguments Object[] arguments) {
 
 
         Object rtnObj = null;
@@ -210,6 +210,7 @@ public class DubboInterceptor implements Interceptor{
                 MessageSender messageSender = AgentExtensionLoader.getExtensionLoader(MessageSender.class)
                         .loadSettingClass();
 
+                LOGGER.info("[messageSender]发送的消息体是:" + span.toString());
                 messageSender.sendMsg("agent", span.toString());
 
             } catch (Throwable te) {
@@ -227,8 +228,14 @@ public class DubboInterceptor implements Interceptor{
      * @param throwable
      */
     private static void dealException(Throwable throwable) {
-        AbstractSpan span = ContextManager.activeSpan();
-        span.log(throwable);
+        RpcContext rpcContext = RpcContext.getContext();
+        boolean isConsumer = rpcContext.isConsumerSide();
+        if (isConsumer) {
+            AbstractSpan span = ContextManager.activeSpan();
+            if (null != span) {
+                span.log(throwable);
+            }
+        }
     }
 
 
