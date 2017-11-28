@@ -1,7 +1,6 @@
 package com.dubboagent.agent;
 
 import com.dubboagent.agent.premain.AgentPremain;
-import com.dubboagent.interceptor.Interceptor;
 import com.dubboagent.utils.extension.AgentExtensionLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +16,9 @@ public class ProtocolAgent {
 
     private static Logger LOGGER = LoggerFactory.getLogger(ProtocolAgent.class);
 
+    /**
+     * 根据接口类型获取指定agent类
+     */
     private static AgentPremain agentPremain = AgentExtensionLoader.getExtensionLoader(AgentPremain.class).loadSettingClass();
 
     public static void premain(String argument, Instrumentation inst) {
