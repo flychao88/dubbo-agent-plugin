@@ -12,5 +12,6 @@ import java.util.concurrent.Callable;
  */
 public interface Interceptor {
 
-    public  Object intercept(@SuperCall Callable<?> call, @Origin Method method, @AllArguments Object[] arguments);
+    public  Object intercept(@SuperCall Callable<?> call, @Origin Method method, @AllArguments Object[] arguments)
+            throws Throwable;
 }

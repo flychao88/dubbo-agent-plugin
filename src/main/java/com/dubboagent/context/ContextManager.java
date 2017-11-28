@@ -2,8 +2,8 @@ package com.dubboagent.context;
 
 import com.dubboagent.context.trace.AbstractSpan;
 import com.dubboagent.context.trace.AbstractTrace;
-import com.dubboagent.context.trace.DubboTrace;
-import com.dubboagent.context.trace.DubboTracingSpan;
+import com.dubboagent.context.trace.dubbo.DubboTrace;
+import com.dubboagent.context.trace.dubbo.DubboTracingSpan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

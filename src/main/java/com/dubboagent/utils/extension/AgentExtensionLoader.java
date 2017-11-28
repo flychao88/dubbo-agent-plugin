@@ -1,5 +1,6 @@
 package com.dubboagent.utils.extension;
 
+import com.dubboagent.agent.premain.AgentPremain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +20,7 @@ public class AgentExtensionLoader<T> {
 
     private static final String SENDER_DIRECTORY = "META-INF/comm/";
     private static final String INTERCEPTOR_DIRECTORY = "META-INF/interceptor/";
+    private static final String AGENT_DIRECTORY = "META-INF/agent/";
 
 
     private volatile Class<?> cachedSettingClass = null;
@@ -81,6 +83,7 @@ public class AgentExtensionLoader<T> {
                     if (null == typeSettingObject) {
                         loadFile(SENDER_DIRECTORY);
                         loadFile(INTERCEPTOR_DIRECTORY);
+                        loadFile(AGENT_DIRECTORY);
                         logger.info("extendsion map:"+EXTENSION_INSTANCES);
                     }
                 }
@@ -198,8 +201,11 @@ public class AgentExtensionLoader<T> {
 
 
     public static void main(String[] args) throws Throwable {
-        MessageSender messageSender = AgentExtensionLoader.getExtensionLoader(MessageSender.class)
+        AgentPremain AgentPremain = AgentExtensionLoader.getExtensionLoader(AgentPremain.class)
                 .loadSettingClass();
+
+        if(null == AgentPremain)
+            System.out.println("===");
     }
 
 

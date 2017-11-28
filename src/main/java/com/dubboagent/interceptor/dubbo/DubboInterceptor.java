@@ -100,7 +100,6 @@ public class DubboInterceptor implements Interceptor {
         return paramObj;
     }
 
-
     /**
      * 初始化前置
      *
@@ -146,7 +145,6 @@ public class DubboInterceptor implements Interceptor {
             } else {
                 span.setSpanId(span.getSpanId() + 1);
             }
-
 
             rpcContext.getAttachments().put("agent-traceId", trace.getTraceId());
             rpcContext.getAttachments().put("agent-spanIdStr", trace.getSpanListStr());
