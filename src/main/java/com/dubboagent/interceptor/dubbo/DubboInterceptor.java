@@ -47,7 +47,7 @@ public class DubboInterceptor implements Interceptor {
             //方法拦截后,调用call方法,程序继续执行
             rtnObj = call.call();
             if (null != rtnObj) {
-                LOGGER.info("[方法" + method.getName() + "] 返回值是:" + rtnObj.toString() + "]");
+                LOGGER.info("[方法" + paramObj.getMethodName() + "] 返回值是:" + rtnObj.toString() + "]");
             }
 
             afterMethod(rtnObj);
