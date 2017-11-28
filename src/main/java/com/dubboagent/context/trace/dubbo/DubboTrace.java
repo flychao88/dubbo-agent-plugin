@@ -1,5 +1,7 @@
-package com.dubboagent.context.trace;
+package com.dubboagent.context.trace.dubbo;
 
+import com.dubboagent.context.trace.AbstractSpan;
+import com.dubboagent.context.trace.AbstractTrace;
 import com.dubboagent.utils.GlobalIdGenerator;
 
 import java.util.EmptyStackException;
