@@ -2,6 +2,8 @@ package com.dubboagent.interceptor.dubbo;
 
 import com.alibaba.dubbo.common.URL;
 import com.alibaba.dubbo.rpc.*;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.dubboagent.context.ContextManager;
 import com.dubboagent.context.trace.AbstractSpan;
 import com.dubboagent.context.trace.AbstractTrace;
@@ -19,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 /**
@@ -94,7 +97,6 @@ public class DubboInterceptor implements Interceptor {
                 }
             });
         }
-
         return paramObj;
     }
 
@@ -127,19 +129,17 @@ public class DubboInterceptor implements Interceptor {
         }
 
         AbstractTrace trace = ContextManager.getOrCreateTrace("dubbo");
-        AbstractSpan span = trace.peekSpan();
-
 
         RpcContext rpcContext = RpcContext.getContext();
         boolean isConsumer = rpcContext.isConsumerSide();
         boolean isProvider = rpcContext.isProviderSide();
-
+        AbstractSpan span = trace.peekSpan();
 
         if (isConsumer) {
             LOGGER.info("[consumer]-[方法" + methodName + " 入参是:" + paramBuf.toString() + "]");
 
             if (null == span) {
-                span = ContextManager.createEntrySpan("dubbo");
+                span = ContextManager.createEntrySpan(1);
                 span.setMethodName(methodName);
                 span.setClassName(className);
                 trace.pushSpan(span);
@@ -160,9 +160,13 @@ public class DubboInterceptor implements Interceptor {
             if (null != traceId && !"".equals(traceId)) {
                 AbstractTrace abstractTrace = ContextManager.createProviderTrace(traceId);
                 String[] spanIdTmp = spanIdStr.split("-");
-                Collections.reverse(Arrays.asList(spanIdTmp));
-                //// TODO: 2017/11/24 创建Span stack 
-
+                List<String> list = Arrays.asList(spanIdTmp);
+                list.forEach((spanStr) -> {
+                    LOGGER.info("provider foreach span:"+spanStr);
+                    AbstractSpan newSpan = ContextManager.createEntrySpan(Integer.valueOf(spanStr));
+                    trace.pushSpan(newSpan);
+                });
+                LOGGER.info("初始化完成:"+trace.getSpanListStr()+"------------"+trace.peekSpan());
             }
         }
     }
@@ -194,7 +198,9 @@ public class DubboInterceptor implements Interceptor {
         boolean isConsumer = rpcContext.isConsumerSide();
 
         if (isConsumer) {
+
             AbstractSpan span = ContextManager.activeSpan();
+
             try {
                 span.setStartTime(startTime);
                 span.setEndTime(endTime);
@@ -207,11 +213,12 @@ public class DubboInterceptor implements Interceptor {
 
             try {
                 //发送消息
+                String message = JSON.toJSONString(span);
                 MessageSender messageSender = AgentExtensionLoader.getExtensionLoader(MessageSender.class)
                         .loadSettingClass();
 
                 LOGGER.info("[messageSender]发送的消息体是:" + span.toString());
-                messageSender.sendMsg("agent", span.toString());
+                messageSender.sendMsg("agent", message);
 
             } catch (Throwable te) {
                 LOGGER.error("[agent消息发送失败] method:" + span.getMethodName() + " className:" + span.getClassName(), te);

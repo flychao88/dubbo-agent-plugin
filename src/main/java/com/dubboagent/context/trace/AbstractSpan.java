@@ -110,4 +110,13 @@ public interface AbstractSpan {
     public void setExecuteTime(long exeTime);
 
 
+    /**
+     * 设置故障错误日志列表
+     * @param logList
+     */
+    public void setLogList(List<LogDataEntity> logList);
+
+
+
+
 }

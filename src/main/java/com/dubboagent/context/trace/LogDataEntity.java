@@ -17,7 +17,7 @@ public class LogDataEntity {
     private long timestamp = 0;
     private List<KeyValuePair> logs;
 
-    private LogDataEntity(long timestamp, List<KeyValuePair> logs) {
+    public LogDataEntity(long timestamp, List<KeyValuePair> logs) {
         this.timestamp = timestamp;
         this.logs = logs;
     }

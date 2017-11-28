@@ -1,5 +1,11 @@
 package com.dubboagent.communication.kafka;
 
+import com.alibaba.dubbo.common.utils.Log;
+import com.alibaba.fastjson.JSON;
+import com.dubboagent.context.trace.AbstractSpan;
+import com.dubboagent.context.trace.DubboTracingSpan;
+import com.dubboagent.context.trace.KeyValuePair;
+import com.dubboagent.context.trace.LogDataEntity;
 import com.dubboagent.utils.extension.MessageSender;
 import com.dubboagent.utils.extension.Setting;
 import org.apache.kafka.clients.producer.Callback;
@@ -7,6 +13,8 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -67,8 +75,23 @@ public class KafkaMessageSender implements MessageSender {
     }
 
     public static void main(String[] args) {
-        KafkaMessageSender kafkaMessageSender = new KafkaMessageSender();
-        kafkaMessageSender.sendMsg("aaaaaa","cccc3333cc");
+        /*KafkaMessageSender kafkaMessageSender = new KafkaMessageSender();
+        kafkaMessageSender.sendMsg("aaaaaa","cccc3333cc");*/
+
+        AbstractSpan span = new DubboTracingSpan();
+        List<LogDataEntity> list = new ArrayList<>();
+
+        List<KeyValuePair> ll = new ArrayList<>();
+        ll.add(new KeyValuePair("aaa","bbbb"));;
+
+        LogDataEntity entity = new LogDataEntity(22, ll);
+        list.add(entity);
+        span.setLogList(list);
+
+        String str = (String) JSON.toJSONString(span);
+        System.out.println(str);
+
+
     }
 
 

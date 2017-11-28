@@ -40,10 +40,10 @@ public class ContextManager {
         return abstractTrace;
     }
 
-    public static AbstractSpan createEntrySpan(String operationName) {
+    public static AbstractSpan createEntrySpan(int spanId) {
         AbstractSpan abstractSpan = new DubboTracingSpan();
-        abstractSpan.setSpanId(1);
-        abstractSpan.setCurrentSpanId(1);
+        abstractSpan.setSpanId(spanId);
+        //abstractSpan.setCurrentSpanId(1);
         return abstractSpan;
     }
 
