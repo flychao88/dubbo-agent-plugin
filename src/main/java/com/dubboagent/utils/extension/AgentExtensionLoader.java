@@ -177,8 +177,6 @@ public class AgentExtensionLoader<T> {
                                 + ", " + clazz.getClass().getName());
                     }
 
-                } else {
-                    logger.error("[agent异常] AgentExtensionLoad加载配置文件异常,必须指定需要使用的类!");
                 }
             }
         } catch (Throwable t) {

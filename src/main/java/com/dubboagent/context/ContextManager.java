@@ -2,7 +2,7 @@ package com.dubboagent.context;
 
 import com.dubboagent.context.trace.AbstractSpan;
 import com.dubboagent.context.trace.AbstractTrace;
-import com.dubboagent.context.trace.dubbo.DubboTrace;
+import com.dubboagent.context.trace.dubbo.Trace;
 import com.dubboagent.context.trace.dubbo.DubboTracingSpan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,10 +22,8 @@ public class ContextManager {
         AbstractTrace abstractTrace = CONTEXT.get();
         if(null == abstractTrace) {
             //TODO 未来可以写成SPI的方式,动态加载
-            if("dubbo".equalsIgnoreCase(operationName)) {
-                abstractTrace = new DubboTrace();
-                CONTEXT.set(abstractTrace);
-            }
+            abstractTrace = new Trace();
+            CONTEXT.set(abstractTrace);
         }
         return abstractTrace;
     }
@@ -33,7 +31,7 @@ public class ContextManager {
     public static AbstractTrace createProviderTrace(String traceId) {
         AbstractTrace abstractTrace = CONTEXT.get();
         if(null == abstractTrace) {
-            abstractTrace = new DubboTrace();
+            abstractTrace = new Trace();
             abstractTrace.setTraceId(traceId);
             CONTEXT.set(abstractTrace);
         }
@@ -48,7 +46,8 @@ public class ContextManager {
     }
 
     public static AbstractSpan activeSpan() {
-        return CONTEXT.get().peekSpan();
+        AbstractSpan span =  CONTEXT.get().peekSpan();
+        return span == null ? null : span;
     }
 
 

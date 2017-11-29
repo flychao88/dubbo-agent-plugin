@@ -29,10 +29,9 @@ import java.util.concurrent.Callable;
  *
  * @author:chao.cheng
  **/
-@Setting
+
 public class DubboInterceptor implements Interceptor {
     private static Logger LOGGER = LoggerFactory.getLogger(DubboInterceptor.class);
-
 
     @RuntimeType
     @Override

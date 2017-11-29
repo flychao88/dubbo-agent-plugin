@@ -24,7 +24,6 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
  *
  * @author:chao.cheng
  **/
-@Setting
 public class DubboAgentPremain implements AgentPremain {
     private static Logger LOGGER = LoggerFactory.getLogger(DubboAgentPremain.class);
     private final Interceptor interceptor = AgentExtensionLoader.getExtensionLoader(Interceptor.class).loadSettingClass();

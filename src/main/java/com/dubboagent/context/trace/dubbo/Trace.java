@@ -12,7 +12,7 @@ import java.util.Stack;
  *
  * @author:chao.cheng
  **/
-public class DubboTrace implements AbstractTrace {
+public class Trace implements AbstractTrace {
 
     /**
      * traceId的所有span
@@ -25,7 +25,7 @@ public class DubboTrace implements AbstractTrace {
     private String traceId;
 
 
-    public DubboTrace() {
+    public Trace() {
         traceId = GlobalIdGenerator.generate();
         spanList = new Stack<AbstractSpan>();
     }
@@ -37,14 +37,14 @@ public class DubboTrace implements AbstractTrace {
     public AbstractSpan peekSpan() {
         try {
 
-            if(spanList.size() == 0) {
+            if(spanList == null && spanList.size() == 0) {
                 return null;
             } else {
                 return spanList.peek();
             }
 
-        } catch (EmptyStackException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            //e.printStackTrace();
             return null;
         }
     }

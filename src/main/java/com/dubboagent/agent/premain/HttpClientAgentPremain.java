@@ -2,6 +2,7 @@ package com.dubboagent.agent.premain;
 
 import com.dubboagent.interceptor.Interceptor;
 import com.dubboagent.utils.extension.AgentExtensionLoader;
+import com.dubboagent.utils.extension.Setting;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
@@ -23,6 +24,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
  *
  * @author:chao.cheng
  **/
+@Setting
 public class HttpClientAgentPremain implements AgentPremain {
 
     private static Logger LOGGER = LoggerFactory.getLogger(HttpClientAgentPremain.class);
@@ -36,9 +38,9 @@ public class HttpClientAgentPremain implements AgentPremain {
             return;
         }
 
-        ElementMatcher elementMatcher = null;
-        elementMatcher = ElementMatchers.nameStartsWith("org.spring.springboot.dubbo")
-                .or(nameMatches("org.apache.http.impl.client.AbstractHttpClient"));
+        ElementMatcher elementMatcher = ElementMatchers.nameStartsWith("org.spring.springboot.http")
+                .or(nameMatches("org.apache.http.impl.client.InternalHttpClient"))
+        .or(nameMatches("org.springframework.web.servlet.DispatcherServlet"));
 
         new AgentBuilder.Default()
                 //根据包名匹配
@@ -58,6 +60,7 @@ public class HttpClientAgentPremain implements AgentPremain {
                                         .and(not(isStatic()))
                                         .and(not(named("main")))
                                         .and((named("doExecute")))
+                                        .or(named("doService"))
                                 //.method(named("printObj")
                         )
                         //拦截过滤器设置
