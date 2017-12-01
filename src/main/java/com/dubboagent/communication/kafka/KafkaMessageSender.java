@@ -14,7 +14,6 @@ import java.util.Properties;
  *
  * @author:chao.cheng
  **/
-@Setting
 public class KafkaMessageSender implements MessageSender {
     private  Properties props = null;
     KafkaProducer<byte[], byte[]> kafkaProducer = null;

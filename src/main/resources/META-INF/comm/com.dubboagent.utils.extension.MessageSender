@@ -1,1 +1,2 @@
 kafka=com.dubboagent.communication.kafka.KafkaMessageSender
+es=com.dubboagent.communication.elasticsearch.ESMessageSender

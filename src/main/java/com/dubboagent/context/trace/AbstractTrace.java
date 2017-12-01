@@ -42,5 +42,10 @@ public interface AbstractTrace {
      */
     public String getSpanListStr();
 
+    public int getLevel() ;
+
+
+    public void setLevel(int level) ;
+
 
 }

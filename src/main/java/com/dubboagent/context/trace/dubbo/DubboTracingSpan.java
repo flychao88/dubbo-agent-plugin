@@ -32,6 +32,9 @@ public class DubboTracingSpan implements AbstractSpan {
     protected long startTime;
     protected long endTime;
 
+
+
+
     /**
      * 方法执行时间
      */
@@ -134,6 +137,12 @@ public class DubboTracingSpan implements AbstractSpan {
     public void setExecuteTime(long exeTime) {
         this.executeTime = exeTime;
     }
+
+    @Override
+    public long getExecuteTime() {
+        return executeTime;
+    }
+
 
 
     @Override

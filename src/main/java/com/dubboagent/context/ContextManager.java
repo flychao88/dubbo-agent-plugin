@@ -28,11 +28,10 @@ public class ContextManager {
         return abstractTrace;
     }
 
-    public static AbstractTrace createProviderTrace(String traceId) {
+    public static AbstractTrace createProviderTrace(String traceId, int level) {
         AbstractTrace abstractTrace = CONTEXT.get();
         if(null == abstractTrace) {
-            abstractTrace = new Trace();
-            abstractTrace.setTraceId(traceId);
+            abstractTrace = new Trace(traceId, level);
             CONTEXT.set(abstractTrace);
         }
         return abstractTrace;

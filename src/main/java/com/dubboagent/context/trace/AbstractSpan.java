@@ -109,6 +109,12 @@ public interface AbstractSpan {
      */
     public void setExecuteTime(long exeTime);
 
+    public long getExecuteTime();
+
+
+
+
+
 
     /**
      * 设置故障错误日志列表

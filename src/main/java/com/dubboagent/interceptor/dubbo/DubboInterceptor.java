@@ -8,6 +8,7 @@ import com.dubboagent.context.ContextManager;
 import com.dubboagent.context.trace.AbstractSpan;
 import com.dubboagent.context.trace.AbstractTrace;
 import com.dubboagent.interceptor.Interceptor;
+import com.dubboagent.utils.Sequence;
 import com.dubboagent.utils.extension.AgentExtensionLoader;
 import com.dubboagent.utils.extension.MessageSender;
 import com.dubboagent.utils.extension.Setting;
@@ -19,9 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 /**
@@ -29,9 +28,10 @@ import java.util.concurrent.Callable;
  *
  * @author:chao.cheng
  **/
-
+@Setting
 public class DubboInterceptor implements Interceptor {
     private static Logger LOGGER = LoggerFactory.getLogger(DubboInterceptor.class);
+    private static Sequence seq = Sequence.getInstance();
 
     @RuntimeType
     @Override
@@ -147,23 +147,25 @@ public class DubboInterceptor implements Interceptor {
 
             rpcContext.getAttachments().put("agent-traceId", trace.getTraceId());
             rpcContext.getAttachments().put("agent-spanIdStr", trace.getSpanListStr());
+            rpcContext.getAttachments().put("agent-level", String.valueOf(trace.getLevel() + 1));
 
         } else if (isProvider) {
             LOGGER.info("[provider]-[方法" + methodName + " 入参是:" + paramBuf.toString() + "]");
 
             String traceId = rpcContext.getAttachment("agent-traceId");
             String spanIdStr = rpcContext.getAttachment("agent-spanIdStr");
+            int level = Integer.valueOf(rpcContext.getAttachment("agent-level"));
 
             if (null != traceId && !"".equals(traceId)) {
-                AbstractTrace abstractTrace = ContextManager.createProviderTrace(traceId);
+                AbstractTrace abstractTrace = ContextManager.createProviderTrace(traceId, level);
                 String[] spanIdTmp = spanIdStr.split("-");
                 List<String> list = Arrays.asList(spanIdTmp);
                 list.forEach((spanStr) -> {
-                    LOGGER.info("provider foreach span:"+spanStr);
+                    LOGGER.info("provider foreach span:" + spanStr);
                     AbstractSpan newSpan = ContextManager.createEntrySpan(Integer.valueOf(spanStr));
                     trace.pushSpan(newSpan);
                 });
-                LOGGER.info("初始化完成:"+trace.getSpanListStr()+"------------"+trace.peekSpan());
+                LOGGER.info("初始化完成:" + trace.getSpanListStr() + "------------" + trace.peekSpan());
             }
         }
     }
@@ -197,28 +199,50 @@ public class DubboInterceptor implements Interceptor {
         if (isConsumer) {
 
             AbstractSpan span = ContextManager.activeSpan();
+            AbstractTrace trace = ContextManager.getOrCreateTrace("dubbo");
+            Map<String, Object> resultMap = new HashMap<>();
 
             try {
                 span.setStartTime(startTime);
                 span.setEndTime(endTime);
                 span.setExecuteTime(endTime - startTime);
-                span.setMethodName(paramObj.getMethodName());
-                span.setClassName(paramObj.getClassName());
+
+
+                String spanId = String.valueOf(span.getSpanId());
+                String level = String.valueOf(trace.getLevel());
+
+                resultMap.put("traceId", trace.getTraceId());
+                resultMap.put("level", level);
+
+                Map<String, String> spanMap = new HashMap<>();
+
+                String logJson = JSON.toJSONString(span.getLogList());
+                spanMap.put("spanId", spanId);
+                spanMap.put("startTime", String.valueOf(startTime));
+                spanMap.put("endTime", String.valueOf(endTime));
+                spanMap.put("execTime", String.valueOf(span.getExecuteTime()));
+                spanMap.put("methodName", span.getMethodName());
+                spanMap.put("className", span.getClassName());
+                spanMap.put("log", logJson);
+                resultMap.put("span" + spanId, spanMap);
+
             } catch (Throwable e) {
                 LOGGER.error(e.getMessage(), e);
+                return;
             }
 
+            String message = "";
             try {
                 //发送消息
-                String message = JSON.toJSONString(span);
+                message = JSON.toJSONString(resultMap);
                 MessageSender messageSender = AgentExtensionLoader.getExtensionLoader(MessageSender.class)
                         .loadSettingClass();
 
-                LOGGER.info("[messageSender]发送的消息体是:" + span.toString());
-                messageSender.sendMsg("agent", message);
+                LOGGER.info("[messageSender]发送的消息体是:" + message);
+                messageSender.sendMsg(seq.getSequenceNumber(), message);
 
             } catch (Throwable te) {
-                LOGGER.error("[agent消息发送失败] method:" + span.getMethodName() + " className:" + span.getClassName(), te);
+                LOGGER.error("[采集消息发送失败] message:" + message, te);
             } finally {
                 ContextManager.cleanTrace();
             }

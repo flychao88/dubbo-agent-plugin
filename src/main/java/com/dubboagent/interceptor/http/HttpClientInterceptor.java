@@ -27,12 +27,12 @@ import java.util.concurrent.Callable;
  *
  * @author:chao.cheng
  **/
-@Setting
 public class HttpClientInterceptor implements Interceptor {
     private static Logger logger = LoggerFactory.getLogger(HttpClientInterceptor.class);
 
     public static String TRACE_ID = "agent-traceId";
     public static String SPAN_ID = "agent-spanIdStr";
+    public static String LEVEL = "agent-level";
 
     @RuntimeType
     @Override
@@ -82,6 +82,7 @@ public class HttpClientInterceptor implements Interceptor {
 
                 httpRequest.addHeader(TRACE_ID, trace.getTraceId());
                 httpRequest.addHeader(SPAN_ID, trace.getSpanListStr());
+                httpRequest.addHeader(LEVEL, String.valueOf(trace.getLevel()));
             } catch (Throwable e) {
                logger.error(e.getMessage(), e);
             }
@@ -93,9 +94,11 @@ public class HttpClientInterceptor implements Interceptor {
                 HttpServletRequest request = (HttpServletRequest) arguments[0];
                 String traceId = (String) request.getHeader(TRACE_ID);
                 String spanId = (String) request.getHeader(SPAN_ID);
-                logger.info("传过来的traceId:" + traceId + "=========传过来的spanId:" + spanId);
+                int level = Integer.valueOf(request.getHeader(LEVEL));
 
-                AbstractTrace trace = ContextManager.createProviderTrace(traceId);
+                logger.info("传过来的traceId:" + traceId + "=========传过来的spanId:" + spanId+"=========level:"+level);
+
+                AbstractTrace trace = ContextManager.createProviderTrace(traceId, level);
                 String[] spanIdTmp = spanId.split("-");
                 List<String> list = Arrays.asList(spanIdTmp);
                 list.forEach((spanStr) -> {

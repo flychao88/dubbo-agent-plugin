@@ -24,7 +24,6 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
  *
  * @author:chao.cheng
  **/
-@Setting
 public class HttpClientAgentPremain implements AgentPremain {
 
     private static Logger LOGGER = LoggerFactory.getLogger(HttpClientAgentPremain.class);
