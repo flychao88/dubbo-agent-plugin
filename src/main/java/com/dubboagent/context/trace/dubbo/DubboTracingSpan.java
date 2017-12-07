@@ -1,7 +1,9 @@
-package com.dubboagent.context.trace;
+package com.dubboagent.context.trace.dubbo;
 
+import com.dubboagent.context.trace.AbstractSpan;
+import com.dubboagent.context.trace.KeyValuePair;
+import com.dubboagent.context.trace.LogDataEntity;
 import com.dubboagent.utils.ThrowableTransformer;
-import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 
@@ -29,6 +31,9 @@ public class DubboTracingSpan implements AbstractSpan {
 
     protected long startTime;
     protected long endTime;
+
+
+
 
     /**
      * 方法执行时间
@@ -132,6 +137,12 @@ public class DubboTracingSpan implements AbstractSpan {
     public void setExecuteTime(long exeTime) {
         this.executeTime = exeTime;
     }
+
+    @Override
+    public long getExecuteTime() {
+        return executeTime;
+    }
+
 
 
     @Override
