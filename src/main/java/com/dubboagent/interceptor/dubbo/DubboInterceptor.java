@@ -117,7 +117,9 @@ public class DubboInterceptor implements Interceptor {
                 Arrays.stream(arguments).forEach((args) -> {
                     if (args instanceof RpcInvocation) {
                         RpcInvocation rpcInvocation = (RpcInvocation) args;
-                        paramBuf.append(rpcInvocation.getArguments());
+                        Arrays.stream(rpcInvocation.getArguments()).forEach((param) -> {
+                            paramBuf.append(param+" ");
+                        });
                     }
                 });
             }
@@ -157,7 +159,7 @@ public class DubboInterceptor implements Interceptor {
             int level = Integer.valueOf(rpcContext.getAttachment("agent-level"));
 
             if (null != traceId && !"".equals(traceId)) {
-                AbstractTrace abstractTrace = ContextManager.createProviderTrace(traceId, level);
+                ContextManager.createProviderTrace(traceId, level);
                 String[] spanIdTmp = spanIdStr.split("-");
                 List<String> list = Arrays.asList(spanIdTmp);
                 list.forEach((spanStr) -> {
@@ -165,7 +167,6 @@ public class DubboInterceptor implements Interceptor {
                     AbstractSpan newSpan = ContextManager.createEntrySpan(Integer.valueOf(spanStr));
                     trace.pushSpan(newSpan);
                 });
-                LOGGER.info("初始化完成:" + trace.getSpanListStr() + "------------" + trace.peekSpan());
             }
         }
     }
