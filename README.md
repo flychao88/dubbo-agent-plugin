@@ -5,32 +5,9 @@
 
 此采集agent-plugin可以用来做很多业务系统的数据采集端,比如通道路由自动切换系统等。
 
-### 使用说明
-在使用探针之前需要先在应用项目的POM文件中添加如下依赖:
-
+# 使用方法
 ```
-<dependency>
-    <groupId>com.alibaba</groupId>
-    <artifactId>dubbo</artifactId>
-    <version>2.8.5</version>
-    <scope>provided</scope>
-</dependency>
-
-<dependency>
-    <groupId>org.apache.kafka</groupId>
-    <artifactId>kafka_2.10</artifactId>
-    <version>0.9.0.0</version>
-    <scope>provided</scope>
-</dependency>
-
-<dependency>
-    <groupId>com.alibaba</groupId>
-    <artifactId>fastjson</artifactId>
-    <version>1.2.41</version>
-    <scope>provided</scope>
-</dependency>
+-javaagent:/路径/dubbo-agent-plugin-1.0-SNAPSHOT.jar
 ```
 
-
-
-
+工程打完包以后，包括：config文件夹和dubbo-agent-plugin-1.0-SNAPSHOT.jar
