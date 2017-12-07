@@ -19,6 +19,7 @@ public class ContextManager {
 
 
     public static AbstractTrace getOrCreateTrace(final String operationName) {
+        LOGGER.info("当前线程号是:::::"+Thread.currentThread().getId()+"----"+Thread.currentThread().getName());
         AbstractTrace abstractTrace = CONTEXT.get();
         if(null == abstractTrace) {
             //TODO 未来可以写成SPI的方式,动态加载
@@ -53,6 +54,14 @@ public class ContextManager {
 
     public static void cleanTrace() {
         CONTEXT.remove();
+    }
+
+
+    public static void main(String[] args) {
+        for(int i=0; i<10; i++) {
+            ContextManager.getOrCreateTrace("dubbo");
+        }
+
     }
 
 
