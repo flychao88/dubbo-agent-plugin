@@ -1,5 +1,6 @@
 package com.dubboagent.communication.elasticsearch;
 
+import com.dubboagent.agent.premain.ServerConfig;
 import com.dubboagent.utils.PropertiesLoadUtils;
 import com.dubboagent.utils.extension.MessageSender;
 import com.dubboagent.utils.extension.Setting;
@@ -24,10 +25,13 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 public class ESMessageSender implements MessageSender {
     private static Logger logger = LoggerFactory.getLogger(ESMessageSender.class);
 
+    private static String CONFIG_PATH = "/config/es_inv.properties";
+
     private Client client = null;
 
     public ESMessageSender() {
         try {
+            PropertiesLoadUtils.init(CONFIG_PATH, ESConfig.class);
             client = TransportClient.builder().build().addTransportAddress(new InetSocketTransportAddress(
                     InetAddress.getByName(ESConfig.ip), ESConfig.port));
 

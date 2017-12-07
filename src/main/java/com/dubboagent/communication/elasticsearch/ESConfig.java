@@ -13,8 +13,7 @@ public class ESConfig {
     //ES 索引名称
     public static String indexName;
 
-    //agent包扫描
-    public static String packageScanPath;
+
 
 
 }

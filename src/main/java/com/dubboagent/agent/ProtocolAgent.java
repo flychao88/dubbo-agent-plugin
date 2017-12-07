@@ -23,7 +23,7 @@ public class ProtocolAgent {
 
     public static void premain(String argument, Instrumentation inst) {
 
-        if(null == agentPremain) {
+        if (null == agentPremain) {
             LOGGER.info("[AgentPremain error] 无法正确加载 AgentPremain.class拦截器,项目将继续启动不影响业务进行!");
             return;
         }

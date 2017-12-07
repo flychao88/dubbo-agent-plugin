@@ -31,7 +31,7 @@ public class DubboAgentPremain implements AgentPremain {
     private static Logger LOGGER = LoggerFactory.getLogger(DubboAgentPremain.class);
     private final Interceptor interceptor = AgentExtensionLoader.getExtensionLoader(Interceptor.class).loadSettingClass();
 
-    private static String CONFIG_PATH = "/config/inv.properties";
+    private static String SERVER_PATH = "/config/server.properties";
 
     @Override
     public void premain(String argument, Instrumentation inst) {
@@ -41,10 +41,10 @@ public class DubboAgentPremain implements AgentPremain {
             return;
         }
 
-        PropertiesLoadUtils.init(CONFIG_PATH, ESConfig.class);
+        PropertiesLoadUtils.init(SERVER_PATH, ServerConfig.class);
 
         ElementMatcher elementMatcher = null;
-        String packageScanPath = ESConfig.packageScanPath;
+        String packageScanPath = ServerConfig.packageScanPath;
         if(packageScanPath != null && !"".equals(packageScanPath)) {
             elementMatcher = ElementMatchers.nameStartsWith(packageScanPath)
                     .or(nameMatches("com.alibaba.dubbo.monitor.support.MonitorFilter"));

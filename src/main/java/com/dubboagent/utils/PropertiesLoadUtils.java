@@ -56,7 +56,7 @@ public class PropertiesLoadUtils {
     }
 
 
-    public static void init(String path, Class<ESConfig> configClzz) {
+    public static void init(String path, Class<?> configClzz) {
 
         InputStream in = null;
         Properties prop = new Properties();
