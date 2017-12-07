@@ -1,7 +1,10 @@
 package com.dubboagent.communication.elasticsearch;
 
+import com.dubboagent.utils.PropertiesLoadUtils;
 import com.dubboagent.utils.extension.MessageSender;
 import com.dubboagent.utils.extension.Setting;
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
@@ -9,6 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
+
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 /**
  * Date:2017/12/1
@@ -19,12 +24,12 @@ import java.net.InetAddress;
 public class ESMessageSender implements MessageSender {
     private static Logger logger = LoggerFactory.getLogger(ESMessageSender.class);
 
-    private Client client;
+    private Client client = null;
 
     public ESMessageSender() {
         try {
             client = TransportClient.builder().build().addTransportAddress(new InetSocketTransportAddress(
-                    InetAddress.getByName("103.240.17.228"), 9300));
+                    InetAddress.getByName(ESConfig.ip), ESConfig.port));
 
         } catch (Throwable e) {
             e.printStackTrace();
@@ -33,9 +38,22 @@ public class ESMessageSender implements MessageSender {
     }
 
     @Override
-    public void sendMsg(String key, String value) {
+    public void sendMsg(String key, String value) throws Exception {
         try {
-            client.prepareIndex("dm", "tweet", key).setSource(value).execute().actionGet();
+            IndexRequest indexRequest = new IndexRequest(ESConfig.indexName, "tweet", key).source(value);
+
+            UpdateRequest updateRequest = new UpdateRequest(ESConfig.indexName, "tweet", key).doc(
+                    jsonBuilder().startObject().field("traceId", key)
+                            .field("levelInfoData", value).endObject())
+                    .upsert(indexRequest);
+            client.update(updateRequest).get();
+
+
+            /*client.prepareUpdate("dmtest7", "tweet" , key).setDoc(jsonBuilder().startObject()
+                    .field("traceId", key)
+                    .field("levelInfoData", value)
+            ).get();*/
+            //client.prepareIndex("dmtest5", "tweet", key).setSource(value).execute().actionGet();
         } catch (Throwable e) {
             throw e;
         }

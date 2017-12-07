@@ -1,6 +1,8 @@
 package com.dubboagent.agent.premain;
 
+import com.dubboagent.communication.elasticsearch.ESConfig;
 import com.dubboagent.interceptor.Interceptor;
+import com.dubboagent.utils.PropertiesLoadUtils;
 import com.dubboagent.utils.extension.AgentExtensionLoader;
 import com.dubboagent.utils.extension.Setting;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -29,6 +31,8 @@ public class DubboAgentPremain implements AgentPremain {
     private static Logger LOGGER = LoggerFactory.getLogger(DubboAgentPremain.class);
     private final Interceptor interceptor = AgentExtensionLoader.getExtensionLoader(Interceptor.class).loadSettingClass();
 
+    private static String CONFIG_PATH = "/config/inv.properties";
+
     @Override
     public void premain(String argument, Instrumentation inst) {
 
@@ -37,11 +41,13 @@ public class DubboAgentPremain implements AgentPremain {
             return;
         }
 
+        PropertiesLoadUtils.init(CONFIG_PATH, ESConfig.class);
+
         ElementMatcher elementMatcher = null;
-        if(argument != null && !"".equals(argument)) {
-            elementMatcher = ElementMatchers.nameStartsWith(argument)
+        String packageScanPath = ESConfig.packageScanPath;
+        if(packageScanPath != null && !"".equals(packageScanPath)) {
+            elementMatcher = ElementMatchers.nameStartsWith(packageScanPath)
                     .or(nameMatches("com.alibaba.dubbo.monitor.support.MonitorFilter"));
-            elementMatcher = ElementMatchers.nameStartsWith(argument);
         } else {
             LOGGER.error("[error] 需要指定需要扫描的包路径,如:com.xxx.test");
             elementMatcher = ElementMatchers.nameStartsWith("org.spring.springboot.dubbo")

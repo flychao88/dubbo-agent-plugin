@@ -3,7 +3,6 @@ package com.dubboagent.interceptor.dubbo;
 import com.alibaba.dubbo.common.URL;
 import com.alibaba.dubbo.rpc.*;
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.dubboagent.context.ContextManager;
 import com.dubboagent.context.trace.AbstractSpan;
 import com.dubboagent.context.trace.AbstractTrace;
@@ -20,6 +19,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.Callable;
 
@@ -32,12 +33,11 @@ import java.util.concurrent.Callable;
 public class DubboInterceptor implements Interceptor {
     private static Logger LOGGER = LoggerFactory.getLogger(DubboInterceptor.class);
     private static Sequence seq = Sequence.getInstance();
+    private static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     @RuntimeType
     @Override
     public Object intercept(@SuperCall Callable<?> call, @Origin Method method, @AllArguments Object[] arguments) {
-
-
         Object rtnObj = null;
 
         DubboInterceptParam paramObj = analyzeDubboParam(arguments);
@@ -201,30 +201,36 @@ public class DubboInterceptor implements Interceptor {
             AbstractSpan span = ContextManager.activeSpan();
             AbstractTrace trace = ContextManager.getOrCreateTrace("dubbo");
             Map<String, Object> resultMap = new HashMap<>();
+            Map<String, Object> infoDataMap = new TreeMap<>();
+            Map<String, Object> levelMap = new TreeMap<>();
+            Map<String, String> spanMap = new HashMap<>();
 
             try {
                 span.setStartTime(startTime);
                 span.setEndTime(endTime);
                 span.setExecuteTime(endTime - startTime);
 
-
                 String spanId = String.valueOf(span.getSpanId());
                 String level = String.valueOf(trace.getLevel());
-
-                resultMap.put("traceId", trace.getTraceId());
-                resultMap.put("level", level);
-
-                Map<String, String> spanMap = new HashMap<>();
-
+                String traceId = trace.getTraceId();
                 String logJson = JSON.toJSONString(span.getLogList());
+
                 spanMap.put("spanId", spanId);
-                spanMap.put("startTime", String.valueOf(startTime));
-                spanMap.put("endTime", String.valueOf(endTime));
+                spanMap.put("startTime", dateFormat.format(new Date(startTime)));
+                spanMap.put("endTime", dateFormat.format(new Date(endTime)));
                 spanMap.put("execTime", String.valueOf(span.getExecuteTime()));
                 spanMap.put("methodName", span.getMethodName());
                 spanMap.put("className", span.getClassName());
                 spanMap.put("log", logJson);
-                resultMap.put("span" + spanId, spanMap);
+
+                levelMap.put("span" + spanId, spanMap);
+                infoDataMap.put(level, levelMap);
+
+                resultMap.put("traceId", traceId);
+                resultMap.put("levelInfoData", infoDataMap);
+                resultMap.put("collectTime", System.currentTimeMillis());
+
+                System.out.println(resultMap);
 
             } catch (Throwable e) {
                 LOGGER.error(e.getMessage(), e);
@@ -243,10 +249,10 @@ public class DubboInterceptor implements Interceptor {
 
             } catch (Throwable te) {
                 LOGGER.error("[采集消息发送失败] message:" + message, te);
-            } finally {
-                ContextManager.cleanTrace();
             }
         }
+
+        ContextManager.cleanTrace();
     }
 
     /**
