@@ -50,8 +50,7 @@ public class DubboAgentPremain implements AgentPremain {
                     .or(nameMatches("com.alibaba.dubbo.monitor.support.MonitorFilter"));
         } else {
             LOGGER.error("[error] 需要指定需要扫描的包路径,如:com.xxx.test");
-            elementMatcher = ElementMatchers.nameStartsWith("org.spring.springboot.dubbo")
-                    .or(nameMatches("com.alibaba.dubbo.monitor.support.MonitorFilter"));
+            return;
         }
         new AgentBuilder.Default()
                 //根据包名匹配
