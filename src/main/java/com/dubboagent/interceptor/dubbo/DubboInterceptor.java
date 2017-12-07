@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
+import java.net.InetAddress;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -215,6 +216,7 @@ public class DubboInterceptor implements Interceptor {
                 String level = String.valueOf(trace.getLevel());
                 String traceId = trace.getTraceId();
                 String logJson = JSON.toJSONString(span.getLogList());
+                String serverIp = InetAddress.getLocalHost().getHostAddress();
 
                 spanMap.put("spanId", spanId);
                 spanMap.put("startTime", dateFormat.format(new Date(startTime)));
@@ -223,6 +225,7 @@ public class DubboInterceptor implements Interceptor {
                 spanMap.put("methodName", span.getMethodName());
                 spanMap.put("className", span.getClassName());
                 spanMap.put("log", logJson);
+                spanMap.put("serverIp",serverIp);
 
                 levelMap.put("span" + spanId, spanMap);
                 infoDataMap.put(level, levelMap);
