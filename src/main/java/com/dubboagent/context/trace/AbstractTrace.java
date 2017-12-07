@@ -42,5 +42,18 @@ public interface AbstractTrace {
      */
     public String getSpanListStr();
 
+    /**
+     * 获取请求层级
+     * @return
+     */
+    public int getLevel() ;
+
+
+    /**
+     * 设置请求层级
+     * @param level
+     */
+    public void setLevel(int level) ;
+
 
 }

@@ -2,6 +2,8 @@
 package com.dubboagent.context.trace;
 
 
+import org.apache.commons.lang.builder.ToStringBuilder;
+
 /**
  * The <code>KeyValuePair</code> represents a object which contains a string key and a string value.
  *
@@ -25,4 +27,12 @@ public class KeyValuePair {
     }
 
 
+    @Override
+    public String toString() {
+        try {
+            return ToStringBuilder.reflectionToString(this);
+        } catch (Exception e) {
+            return "";
+        }
+    }
 }

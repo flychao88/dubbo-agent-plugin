@@ -3,6 +3,8 @@
 package com.dubboagent.context.trace;
 
 
+import org.apache.commons.lang.builder.ToStringBuilder;
+
 import java.util.LinkedList;
 import java.util.List;
 
@@ -15,7 +17,7 @@ public class LogDataEntity {
     private long timestamp = 0;
     private List<KeyValuePair> logs;
 
-    private LogDataEntity(long timestamp, List<KeyValuePair> logs) {
+    public LogDataEntity(long timestamp, List<KeyValuePair> logs) {
         this.timestamp = timestamp;
         this.logs = logs;
     }
@@ -43,5 +45,12 @@ public class LogDataEntity {
         }
     }
 
-
+    @Override
+    public String toString() {
+        try {
+            return ToStringBuilder.reflectionToString(this);
+        } catch (Exception e) {
+            return "";
+        }
+    }
 }

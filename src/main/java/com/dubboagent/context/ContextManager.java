@@ -2,8 +2,8 @@ package com.dubboagent.context;
 
 import com.dubboagent.context.trace.AbstractSpan;
 import com.dubboagent.context.trace.AbstractTrace;
-import com.dubboagent.context.trace.DubboTrace;
-import com.dubboagent.context.trace.DubboTracingSpan;
+import com.dubboagent.context.trace.dubbo.Trace;
+import com.dubboagent.context.trace.dubbo.DubboTracingSpan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,33 +22,31 @@ public class ContextManager {
         AbstractTrace abstractTrace = CONTEXT.get();
         if(null == abstractTrace) {
             //TODO 未来可以写成SPI的方式,动态加载
-            if("dubbo".equalsIgnoreCase(operationName)) {
-                abstractTrace = new DubboTrace();
-                CONTEXT.set(abstractTrace);
-            }
-        }
-        return abstractTrace;
-    }
-
-    public static AbstractTrace createProviderTrace(String traceId) {
-        AbstractTrace abstractTrace = CONTEXT.get();
-        if(null == abstractTrace) {
-            abstractTrace = new DubboTrace();
-            abstractTrace.setTraceId(traceId);
+            abstractTrace = new Trace();
             CONTEXT.set(abstractTrace);
         }
         return abstractTrace;
     }
 
-    public static AbstractSpan createEntrySpan(String operationName) {
+    public static AbstractTrace createProviderTrace(String traceId, int level) {
+        AbstractTrace abstractTrace = CONTEXT.get();
+        if(null == abstractTrace) {
+            abstractTrace = new Trace(traceId, level);
+            CONTEXT.set(abstractTrace);
+        }
+        return abstractTrace;
+    }
+
+    public static AbstractSpan createEntrySpan(int spanId) {
         AbstractSpan abstractSpan = new DubboTracingSpan();
-        abstractSpan.setSpanId(1);
-        abstractSpan.setCurrentSpanId(1);
+        abstractSpan.setSpanId(spanId);
+        //abstractSpan.setCurrentSpanId(1);
         return abstractSpan;
     }
 
     public static AbstractSpan activeSpan() {
-        return CONTEXT.get().peekSpan();
+        AbstractSpan span =  CONTEXT.get().peekSpan();
+        return span == null ? null : span;
     }
 
 

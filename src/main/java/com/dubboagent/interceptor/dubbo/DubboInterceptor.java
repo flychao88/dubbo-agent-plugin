@@ -1,12 +1,16 @@
-package com.dubboagent.interceptor;
+package com.dubboagent.interceptor.dubbo;
 
 import com.alibaba.dubbo.common.URL;
 import com.alibaba.dubbo.rpc.*;
+import com.alibaba.fastjson.JSON;
 import com.dubboagent.context.ContextManager;
 import com.dubboagent.context.trace.AbstractSpan;
 import com.dubboagent.context.trace.AbstractTrace;
+import com.dubboagent.interceptor.Interceptor;
+import com.dubboagent.utils.Sequence;
 import com.dubboagent.utils.extension.AgentExtensionLoader;
 import com.dubboagent.utils.extension.MessageSender;
+import com.dubboagent.utils.extension.Setting;
 import net.bytebuddy.implementation.bind.annotation.AllArguments;
 import net.bytebuddy.implementation.bind.annotation.Origin;
 import net.bytebuddy.implementation.bind.annotation.RuntimeType;
@@ -15,8 +19,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Collections;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 /**
@@ -24,25 +29,27 @@ import java.util.concurrent.Callable;
  *
  * @author:chao.cheng
  **/
-public class DubboInterceptor {
+@Setting
+public class DubboInterceptor implements Interceptor {
     private static Logger LOGGER = LoggerFactory.getLogger(DubboInterceptor.class);
-
+    private static Sequence seq = Sequence.getInstance();
+    private static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     @RuntimeType
-    public static Object intercept(@SuperCall Callable<?> call, @Origin Method method, @AllArguments Object[] arguments) {
-
-        long startTime = System.currentTimeMillis();
+    @Override
+    public Object intercept(@SuperCall Callable<?> call, @Origin Method method, @AllArguments Object[] arguments) {
         Object rtnObj = null;
 
         DubboInterceptParam paramObj = analyzeDubboParam(arguments);
 
         beforeMethod(paramObj, arguments);
 
+        long startTime = System.currentTimeMillis();
         try {
             //方法拦截后,调用call方法,程序继续执行
             rtnObj = call.call();
             if (null != rtnObj) {
-                LOGGER.info("[方法" + method.getName() + "] 返回值是:" + rtnObj.toString() + "]");
+                LOGGER.info("[方法" + paramObj.getMethodName() + "] 返回值是:" + rtnObj.toString() + "]");
             }
 
             afterMethod(rtnObj);
@@ -89,10 +96,8 @@ public class DubboInterceptor {
                 }
             });
         }
-
         return paramObj;
     }
-
 
     /**
      * 初始化前置
@@ -112,7 +117,9 @@ public class DubboInterceptor {
                 Arrays.stream(arguments).forEach((args) -> {
                     if (args instanceof RpcInvocation) {
                         RpcInvocation rpcInvocation = (RpcInvocation) args;
-                        paramBuf.append(rpcInvocation.getArguments());
+                        Arrays.stream(rpcInvocation.getArguments()).forEach((param) -> {
+                            paramBuf.append(param+" ");
+                        });
                     }
                 });
             }
@@ -122,19 +129,17 @@ public class DubboInterceptor {
         }
 
         AbstractTrace trace = ContextManager.getOrCreateTrace("dubbo");
-        AbstractSpan span = trace.peekSpan();
-
 
         RpcContext rpcContext = RpcContext.getContext();
         boolean isConsumer = rpcContext.isConsumerSide();
         boolean isProvider = rpcContext.isProviderSide();
-
+        AbstractSpan span = trace.peekSpan();
 
         if (isConsumer) {
             LOGGER.info("[consumer]-[方法" + methodName + " 入参是:" + paramBuf.toString() + "]");
 
             if (null == span) {
-                span = ContextManager.createEntrySpan("dubbo");
+                span = ContextManager.createEntrySpan(1);
                 span.setMethodName(methodName);
                 span.setClassName(className);
                 trace.pushSpan(span);
@@ -142,22 +147,26 @@ public class DubboInterceptor {
                 span.setSpanId(span.getSpanId() + 1);
             }
 
-
             rpcContext.getAttachments().put("agent-traceId", trace.getTraceId());
             rpcContext.getAttachments().put("agent-spanIdStr", trace.getSpanListStr());
+            rpcContext.getAttachments().put("agent-level", String.valueOf(trace.getLevel() + 1));
 
         } else if (isProvider) {
             LOGGER.info("[provider]-[方法" + methodName + " 入参是:" + paramBuf.toString() + "]");
 
             String traceId = rpcContext.getAttachment("agent-traceId");
             String spanIdStr = rpcContext.getAttachment("agent-spanIdStr");
+            int level = Integer.valueOf(rpcContext.getAttachment("agent-level"));
 
             if (null != traceId && !"".equals(traceId)) {
-                AbstractTrace abstractTrace = ContextManager.createProviderTrace(traceId);
+                ContextManager.createProviderTrace(traceId, level);
                 String[] spanIdTmp = spanIdStr.split("-");
-                Collections.reverse(Arrays.asList(spanIdTmp));
-                //// TODO: 2017/11/24 创建Span stack 
-
+                List<String> list = Arrays.asList(spanIdTmp);
+                list.forEach((spanStr) -> {
+                    LOGGER.info("provider foreach span:" + spanStr);
+                    AbstractSpan newSpan = ContextManager.createEntrySpan(Integer.valueOf(spanStr));
+                    trace.pushSpan(newSpan);
+                });
             }
         }
     }
@@ -189,30 +198,62 @@ public class DubboInterceptor {
         boolean isConsumer = rpcContext.isConsumerSide();
 
         if (isConsumer) {
+
             AbstractSpan span = ContextManager.activeSpan();
+            AbstractTrace trace = ContextManager.getOrCreateTrace("dubbo");
+            Map<String, Object> resultMap = new HashMap<>();
+            Map<String, Object> infoDataMap = new TreeMap<>();
+            Map<String, Object> levelMap = new TreeMap<>();
+            Map<String, String> spanMap = new HashMap<>();
+
             try {
                 span.setStartTime(startTime);
                 span.setEndTime(endTime);
                 span.setExecuteTime(endTime - startTime);
-                span.setMethodName(paramObj.getMethodName());
-                span.setClassName(paramObj.getClassName());
+
+                String spanId = String.valueOf(span.getSpanId());
+                String level = String.valueOf(trace.getLevel());
+                String traceId = trace.getTraceId();
+                String logJson = JSON.toJSONString(span.getLogList());
+
+                spanMap.put("spanId", spanId);
+                spanMap.put("startTime", dateFormat.format(new Date(startTime)));
+                spanMap.put("endTime", dateFormat.format(new Date(endTime)));
+                spanMap.put("execTime", String.valueOf(span.getExecuteTime()));
+                spanMap.put("methodName", span.getMethodName());
+                spanMap.put("className", span.getClassName());
+                spanMap.put("log", logJson);
+
+                levelMap.put("span" + spanId, spanMap);
+                infoDataMap.put(level, levelMap);
+
+                resultMap.put("traceId", traceId);
+                resultMap.put("levelInfoData", infoDataMap);
+                resultMap.put("collectTime", System.currentTimeMillis());
+
+                System.out.println(resultMap);
+
             } catch (Throwable e) {
                 LOGGER.error(e.getMessage(), e);
+                return;
             }
 
+            String message = "";
             try {
                 //发送消息
+                message = JSON.toJSONString(resultMap);
                 MessageSender messageSender = AgentExtensionLoader.getExtensionLoader(MessageSender.class)
                         .loadSettingClass();
 
-                messageSender.sendMsg("agent", span.toString());
+                LOGGER.info("[messageSender]发送的消息体是:" + message);
+                messageSender.sendMsg(seq.getSequenceNumber(), message);
 
             } catch (Throwable te) {
-                LOGGER.error("[agent消息发送失败] method:" + span.getMethodName() + " className:" + span.getClassName(), te);
-            } finally {
-                ContextManager.cleanTrace();
+                LOGGER.error("[采集消息发送失败] message:" + message, te);
             }
         }
+
+        ContextManager.cleanTrace();
     }
 
     /**
@@ -222,8 +263,14 @@ public class DubboInterceptor {
      * @param throwable
      */
     private static void dealException(Throwable throwable) {
-        AbstractSpan span = ContextManager.activeSpan();
-        span.log(throwable);
+        RpcContext rpcContext = RpcContext.getContext();
+        boolean isConsumer = rpcContext.isConsumerSide();
+        if (isConsumer) {
+            AbstractSpan span = ContextManager.activeSpan();
+            if (null != span) {
+                span.log(throwable);
+            }
+        }
     }
 
 
