@@ -5,5 +5,11 @@ package com.dubboagent.utils.extension;
  */
 public interface MessageSender {
 
+    /**
+     * 消息发送
+     * @param key
+     * @param value
+     * @throws Exception
+     */
     public  void sendMsg(String key, String value) throws Exception ;
 }

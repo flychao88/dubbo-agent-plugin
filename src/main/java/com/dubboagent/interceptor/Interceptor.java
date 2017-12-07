@@ -12,6 +12,14 @@ import java.util.concurrent.Callable;
  */
 public interface Interceptor {
 
+    /**
+     * 拦截主方法
+     * @param call
+     * @param method
+     * @param arguments
+     * @return
+     * @throws Throwable
+     */
     public  Object intercept(@SuperCall Callable<?> call, @Origin Method method, @AllArguments Object[] arguments)
             throws Throwable;
 }

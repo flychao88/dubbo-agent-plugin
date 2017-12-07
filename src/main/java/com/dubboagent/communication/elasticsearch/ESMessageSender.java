@@ -1,6 +1,5 @@
 package com.dubboagent.communication.elasticsearch;
 
-import com.dubboagent.agent.premain.ServerConfig;
 import com.dubboagent.utils.PropertiesLoadUtils;
 import com.dubboagent.utils.extension.MessageSender;
 import com.dubboagent.utils.extension.Setting;

@@ -198,13 +198,6 @@ public class AgentExtensionLoader<T> {
     }
 
 
-    public static void main(String[] args) throws Throwable {
-        AgentPremain AgentPremain = AgentExtensionLoader.getExtensionLoader(AgentPremain.class)
-                .loadSettingClass();
-
-        if(null == AgentPremain)
-            System.out.println("===");
-    }
 
 
 }
