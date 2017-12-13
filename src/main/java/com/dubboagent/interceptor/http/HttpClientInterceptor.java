@@ -62,7 +62,6 @@ public class HttpClientInterceptor implements Interceptor {
 
     private void beforeMethod(@AllArguments Object[] arguments) throws Throwable {
         if (arguments[0] instanceof HttpHost && arguments[1] instanceof HttpRequest) {
-            logger.info("==============client========");
             HttpHost httpHost = (HttpHost) arguments[0];
             HttpRequest httpRequest = (HttpRequest) arguments[1];
 

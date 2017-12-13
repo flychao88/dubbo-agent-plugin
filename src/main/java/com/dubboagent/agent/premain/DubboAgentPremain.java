@@ -1,6 +1,6 @@
 package com.dubboagent.agent.premain;
 
-import com.dubboagent.communication.elasticsearch.ESConfig;
+import com.dubboagent.config.ServerConfig;
 import com.dubboagent.interceptor.Interceptor;
 import com.dubboagent.utils.PropertiesLoadUtils;
 import com.dubboagent.utils.extension.AgentExtensionLoader;
@@ -44,7 +44,7 @@ public class DubboAgentPremain implements AgentPremain {
         PropertiesLoadUtils.init(SERVER_PATH, ServerConfig.class);
 
         ElementMatcher elementMatcher = null;
-        String packageScanPath = ServerConfig.packageScanPath;
+        String packageScanPath = ServerConfig.PACKAGE_SCAN_PATH;
         if(packageScanPath != null && !"".equals(packageScanPath)) {
             elementMatcher = ElementMatchers.nameStartsWith(packageScanPath)
                     .or(nameMatches("com.alibaba.dubbo.monitor.support.MonitorFilter"));

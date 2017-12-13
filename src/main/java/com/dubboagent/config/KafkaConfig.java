@@ -1,4 +1,4 @@
-package com.dubboagent.communication.kafka;
+package com.dubboagent.config;
 
 /**
  * Date:2017/12/7

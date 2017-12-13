@@ -1,4 +1,4 @@
-package com.dubboagent.communication.elasticsearch;
+package com.dubboagent.config;
 
 /**
  * Date:2017/12/6
@@ -11,7 +11,7 @@ public class ESConfig {
     //ES 端口号
     public static int port;
     //ES 索引名称
-    public static String indexName;
+    public static String INDEX_NAME;
 
 
 

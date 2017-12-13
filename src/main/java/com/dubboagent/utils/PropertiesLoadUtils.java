@@ -1,6 +1,5 @@
 package com.dubboagent.utils;
 
-import com.dubboagent.communication.elasticsearch.ESConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,7 +69,7 @@ public class PropertiesLoadUtils {
 
             for (Field field : fields) {
                 field.setAccessible(true);
-                String value = prop.getProperty(field.getName());
+                String value = prop.getProperty(field.getName().toLowerCase());
                 if (value != null) {
                     Class<?> type = field.getType();
                     if (type.equals(int.class)) {
@@ -85,13 +84,13 @@ public class PropertiesLoadUtils {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("[read file error] 读取配置文件出错! path:"+path, e);
         } finally {
             if (in != null) {
                 try {
                     in.close();
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    logger.error("[file stream close error]  path:"+path, e);
                 }
             }
         }

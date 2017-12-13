@@ -32,7 +32,7 @@ import java.util.concurrent.Callable;
  **/
 @Setting
 public class DubboInterceptor implements Interceptor {
-    private static Logger LOGGER = LoggerFactory.getLogger(DubboInterceptor.class);
+    private static Logger logger = LoggerFactory.getLogger(DubboInterceptor.class);
     private static Sequence seq = Sequence.getInstance();
     private static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
@@ -50,20 +50,20 @@ public class DubboInterceptor implements Interceptor {
             //方法拦截后,调用call方法,程序继续执行
             rtnObj = call.call();
             if (null != rtnObj) {
-                LOGGER.info("[方法" + paramObj.getMethodName() + "] 返回值是:" + rtnObj.toString() + "]");
+                logger.info("[方法" + paramObj.getMethodName() + "] 返回值是:" + rtnObj.toString() + "]");
             }
 
             afterMethod(rtnObj);
 
         } catch (Throwable e) {
-            LOGGER.error("[DubboInterceptor拦截异常] 方法名是:" + method.getName() + " 参数是:", e);
+            logger.error("[DubboInterceptor拦截异常] 方法名是:" + method.getName() + " 参数是:", e);
             //捕获异常执行
             dealException(e);
 
         } finally {
             long endTime = System.currentTimeMillis();
 
-            LOGGER.info("[服务接口名:" + paramObj.getClassName() + " 方法名:" + paramObj.getMethodName() + " 执行时间是:"
+            logger.info("[服务接口名:" + paramObj.getClassName() + " 方法名:" + paramObj.getMethodName() + " 执行时间是:"
                     + (endTime - startTime) + "毫秒]");
 
             finallyMethod(startTime, endTime, paramObj);
@@ -83,15 +83,15 @@ public class DubboInterceptor implements Interceptor {
         DubboInterceptParam paramObj = new DubboInterceptParam();
 
         if (arguments != null && arguments.length > 0) {
-            Arrays.stream(arguments).forEach((args) -> {
-                if (args instanceof Invoker) {
-                    Invoker urlStr = (Invoker) args;
+            Arrays.stream(arguments).forEach((methodParam) -> {
+                if (methodParam instanceof Invoker) {
+                    Invoker urlStr = (Invoker) methodParam;
                     URL url = urlStr.getUrl();
                     String className = url.getParameter("interface");
                     paramObj.setClassName(className);
                 }
-                if (args instanceof RpcInvocation) {
-                    RpcInvocation rpcInvocation = (RpcInvocation) args;
+                if (methodParam instanceof RpcInvocation) {
+                    RpcInvocation rpcInvocation = (RpcInvocation) methodParam;
                     String methodName = rpcInvocation.getMethodName();
                     paramObj.setMethodName(methodName);
                 }
@@ -102,9 +102,11 @@ public class DubboInterceptor implements Interceptor {
 
     /**
      * 初始化前置
+     * 判断是消费者还是生产者
+     * 根据消费者产生traceId和spanId
      *
-     * @param arguments
-     * @return
+     * @param paramObj  dubbo参数对象
+     * @param arguments 拦截后获取的参数对象
      */
     public static void beforeMethod(DubboInterceptParam paramObj, Object[] arguments) {
 
@@ -115,18 +117,18 @@ public class DubboInterceptor implements Interceptor {
         try {
             if (arguments != null && arguments.length > 0) {
 
-                Arrays.stream(arguments).forEach((args) -> {
-                    if (args instanceof RpcInvocation) {
-                        RpcInvocation rpcInvocation = (RpcInvocation) args;
+                Arrays.stream(arguments).forEach((methodParam) -> {
+                    if (methodParam instanceof RpcInvocation) {
+                        RpcInvocation rpcInvocation = (RpcInvocation) methodParam;
                         Arrays.stream(rpcInvocation.getArguments()).forEach((param) -> {
-                            paramBuf.append(param+" ");
+                            paramBuf.append(param + " ");
                         });
                     }
                 });
             }
 
         } catch (Exception e) {
-            LOGGER.error("[获取方法" + methodName + " 入参失败]", e);
+            logger.error("[获取方法" + methodName + " 入参失败]", e);
         }
 
         AbstractTrace trace = ContextManager.getOrCreateTrace("dubbo");
@@ -137,7 +139,7 @@ public class DubboInterceptor implements Interceptor {
         AbstractSpan span = trace.peekSpan();
 
         if (isConsumer) {
-            LOGGER.info("[consumer]-[方法" + methodName + " 入参是:" + paramBuf.toString() + "]");
+            logger.info("[consumer]-[方法" + methodName + " 入参是:" + paramBuf.toString() + "]");
 
             if (null == span) {
                 span = ContextManager.createEntrySpan(1);
@@ -153,7 +155,7 @@ public class DubboInterceptor implements Interceptor {
             rpcContext.getAttachments().put("agent-level", String.valueOf(trace.getLevel() + 1));
 
         } else if (isProvider) {
-            LOGGER.info("[provider]-[方法" + methodName + " 入参是:" + paramBuf.toString() + "]");
+            logger.info("[provider]-[方法" + methodName + " 入参是:" + paramBuf.toString() + "]");
 
             String traceId = rpcContext.getAttachment("agent-traceId");
             String spanIdStr = rpcContext.getAttachment("agent-spanIdStr");
@@ -164,7 +166,7 @@ public class DubboInterceptor implements Interceptor {
                 String[] spanIdTmp = spanIdStr.split("-");
                 List<String> list = Arrays.asList(spanIdTmp);
                 list.forEach((spanStr) -> {
-                    LOGGER.info("provider foreach span:" + spanStr);
+                    logger.info("provider foreach span:" + spanStr);
                     AbstractSpan newSpan = ContextManager.createEntrySpan(Integer.valueOf(spanStr));
                     trace.pushSpan(newSpan);
                 });
@@ -177,7 +179,8 @@ public class DubboInterceptor implements Interceptor {
      * 拦截方法后置处理
      * 主要判断是否有异常
      *
-     * @param rtnObj
+     * @param rtnObj 判断类型是否是Dubbo的返回对象
+     *               如果是则获取异常信息
      * @throws Throwable
      */
     public static void afterMethod(Object rtnObj) throws Throwable {
@@ -187,12 +190,15 @@ public class DubboInterceptor implements Interceptor {
         }
     }
 
+
     /**
-     * span消息封装
-     * 消息发送
+     * finally方法
+     * 根据traceId和span信息封装消息对象
+     * 将消息对象发送到采集端,如:kafka和elasticSearch等
      *
      * @param startTime
      * @param endTime
+     * @param paramObj
      */
     public static void finallyMethod(long startTime, long endTime, DubboInterceptParam paramObj) {
         RpcContext rpcContext = RpcContext.getContext();
@@ -225,7 +231,7 @@ public class DubboInterceptor implements Interceptor {
                 spanMap.put("methodName", span.getMethodName());
                 spanMap.put("className", span.getClassName());
                 spanMap.put("log", logJson);
-                spanMap.put("serverIp",serverIp);
+                spanMap.put("serverIp", serverIp);
 
                 levelMap.put("span" + spanId, spanMap);
                 infoDataMap.put(level, levelMap);
@@ -237,7 +243,7 @@ public class DubboInterceptor implements Interceptor {
                 System.out.println(resultMap);
 
             } catch (Throwable e) {
-                LOGGER.error(e.getMessage(), e);
+                logger.error(e.getMessage(), e);
                 return;
             }
 
@@ -248,11 +254,11 @@ public class DubboInterceptor implements Interceptor {
                 MessageSender messageSender = AgentExtensionLoader.getExtensionLoader(MessageSender.class)
                         .loadSettingClass();
 
-                LOGGER.info("[messageSender]发送的消息体是:" + message);
+                logger.info("[messageSender]发送的消息体是:" + message);
                 messageSender.sendMsg(seq.getSequenceNumber(), message);
 
             } catch (Throwable te) {
-                LOGGER.error("[采集消息发送失败] message:" + message, te);
+                logger.error("[采集消息发送失败] message:" + message, te);
             }
         }
 
@@ -293,6 +299,7 @@ public class DubboInterceptor implements Interceptor {
 
         return operationName.toString();
     }
+
 
     /**
      * 获取请求URL

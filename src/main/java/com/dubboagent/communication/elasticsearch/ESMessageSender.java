@@ -1,5 +1,6 @@
 package com.dubboagent.communication.elasticsearch;
 
+import com.dubboagent.config.ESConfig;
 import com.dubboagent.utils.PropertiesLoadUtils;
 import com.dubboagent.utils.extension.MessageSender;
 import com.dubboagent.utils.extension.Setting;
@@ -43,9 +44,9 @@ public class ESMessageSender implements MessageSender {
     @Override
     public void sendMsg(String key, String value) throws Exception {
         try {
-            IndexRequest indexRequest = new IndexRequest(ESConfig.indexName, "tweet", key).source(value);
+            IndexRequest indexRequest = new IndexRequest(ESConfig.INDEX_NAME, "tweet", key).source(value);
 
-            UpdateRequest updateRequest = new UpdateRequest(ESConfig.indexName, "tweet", key).doc(
+            UpdateRequest updateRequest = new UpdateRequest(ESConfig.INDEX_NAME, "tweet", key).doc(
                     jsonBuilder().startObject().field("traceId", key)
                             .field("levelInfoData", value).endObject())
                     .upsert(indexRequest);
