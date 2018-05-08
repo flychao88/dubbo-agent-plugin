@@ -1,9 +1,9 @@
-package com.dubboagent.agent.premain;
+package com.snifferagent.agent.premain;
 
 import java.lang.instrument.Instrumentation;
 
 /**
- * Created by nina on 2017/11/28.
+ * Created by chengchao on 2017/11/28.
  */
 public interface AgentPremain {
 

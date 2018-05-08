@@ -1,8 +1,10 @@
-package com.dubboagent.agent.premain;
+package com.snifferagent.agent.premain;
 
-import com.dubboagent.interceptor.Interceptor;
-import com.dubboagent.utils.extension.AgentExtensionLoader;
-import com.dubboagent.utils.extension.Setting;
+import com.snifferagent.config.ServerConfig;
+import com.snifferagent.interceptor.Interceptor;
+import com.snifferagent.utils.PropertiesLoadUtils;
+import com.snifferagent.utils.extension.AgentExtensionLoader;
+import com.snifferagent.utils.extension.Setting;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
@@ -24,23 +26,32 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
  *
  * @author:chao.cheng
  **/
-public class HttpClientAgentPremain implements AgentPremain {
-
-    private static Logger LOGGER = LoggerFactory.getLogger(HttpClientAgentPremain.class);
+@Setting
+public class DubboAgentPremain implements AgentPremain {
+    private static Logger LOGGER = LoggerFactory.getLogger(DubboAgentPremain.class);
     private final Interceptor interceptor = AgentExtensionLoader.getExtensionLoader(Interceptor.class).loadSettingClass();
+
+    private static String SERVER_PATH = "/config/server.properties";
 
     @Override
     public void premain(String argument, Instrumentation inst) {
 
-        if (null == interceptor) {
+        if(null == interceptor) {
             LOGGER.info("[interceptor error] 无法正确加载Interceptor.class拦截器,项目将继续启动不影响业务进行!");
             return;
         }
 
-        ElementMatcher elementMatcher = ElementMatchers.nameStartsWith("org.spring.springboot.http")
-                .or(nameMatches("org.apache.http.impl.client.InternalHttpClient"))
-        .or(nameMatches("org.springframework.web.servlet.DispatcherServlet"));
+        PropertiesLoadUtils.init(SERVER_PATH, ServerConfig.class);
 
+        ElementMatcher elementMatcher = null;
+        String packageScanPath = ServerConfig.PACKAGE_SCAN_PATH;
+        if(packageScanPath != null && !"".equals(packageScanPath)) {
+            elementMatcher = ElementMatchers.nameStartsWith(packageScanPath)
+                    .or(nameMatches("com.alibaba.dubbo.monitor.support.MonitorFilter"));
+        } else {
+            LOGGER.error("[error] 需要指定需要扫描的包路径,如:com.xxx.test");
+            return;
+        }
         new AgentBuilder.Default()
                 //根据包名匹配
                 .type(elementMatcher)
@@ -53,18 +64,17 @@ public class HttpClientAgentPremain implements AgentPremain {
                 .and(not(isPrivate()))
                 .and(not(isEnum()))
                 // .and(not(isAnnotation()))
-                .transform((builder, typeDescription, classLoader) -> builder
+                .transform((builder,typeDescription,classLoader) -> builder
                         //不匹配哪些方法
                         .method(not(isConstructor())
                                         .and(not(isStatic()))
                                         .and(not(named("main")))
-                                        .and((named("doExecute")))
-                                        .or(named("doService"))
+                                        .and((named("invoke")))
                                 //.method(named("printObj")
                         )
                         //拦截过滤器设置
                         .intercept(MethodDelegation.to(interceptor))
-                ).with(new AgentBuilder.Listener() {
+                ).with(new AgentBuilder.Listener(){
 
             @Override
             public void onTransformation(TypeDescription typeDescription, ClassLoader classLoader, JavaModule javaModule,
