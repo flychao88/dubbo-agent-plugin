@@ -1,0 +1,2 @@
+http=com.snifferagent.agent.premain.HttpClientAgentPremain
+dubbo=com.snifferagent.agent.premain.DubboAgentPremain

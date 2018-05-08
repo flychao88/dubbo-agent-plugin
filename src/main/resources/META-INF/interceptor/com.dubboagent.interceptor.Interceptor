@@ -1,2 +1,0 @@
-dubbo=com.dubboagent.interceptor.dubbo.DubboInterceptor
-http=com.dubboagent.interceptor.http.HttpClientInterceptor

@@ -1,0 +1,2 @@
+kafka=com.snifferagent.communication.kafka.KafkaMessageSender
+es=com.snifferagent.communication.elasticsearch.ESMessageSender

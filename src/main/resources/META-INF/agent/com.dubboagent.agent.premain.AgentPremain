@@ -1,2 +1,0 @@
-http=com.dubboagent.agent.premain.HttpClientAgentPremain
-dubbo=com.dubboagent.agent.premain.DubboAgentPremain

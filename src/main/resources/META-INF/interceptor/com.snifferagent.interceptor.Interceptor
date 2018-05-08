@@ -1,0 +1,2 @@
+dubbo=com.snifferagent.interceptor.dubbo.DubboInterceptor
+http=com.snifferagent.interceptor.http.HttpClientInterceptor
